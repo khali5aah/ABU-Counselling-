@@ -1,121 +1,673 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'config/env.dart';
+import 'config/routes.dart';
+import 'core/api/api_client.dart';
+import 'core/api/api_exception.dart';
+import 'core/api/http_api_client.dart';
+import 'core/api/mock_api_client.dart';
+import 'core/models/user.dart';
+import 'core/storage/token_storage.dart';
+import 'core/validation/validators.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const CrownbirdApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CrownbirdApp extends StatelessWidget {
+  const CrownbirdApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+    return ChangeNotifierProvider(
+      create: (_) => AuthController(
+        apiClient: Env.useMock
+            ? MockApiClient(SecureTokenStorage())
+            : HttpApiClient(SecureTokenStorage()),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      child: MaterialApp(
+        title: 'Crownbird E-Counselling',
+        theme: ThemeData(
+          useMaterial3: true,
+          primarySwatch: Colors.green,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        ),
+        initialRoute: Routes.splash,
+        onGenerateRoute: _routes,
+      ),
     );
+  }
+
+  Route<dynamic> _routes(RouteSettings settings) {
+    switch (settings.name) {
+      case Routes.splash:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case Routes.welcome:
+        return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+      case Routes.phone:
+        return MaterialPageRoute(builder: (_) => const PhoneScreen());
+      case Routes.otp:
+        final args = settings.arguments as OtpArgs;
+        return MaterialPageRoute(builder: (_) => OtpScreen(args: args));
+      case Routes.setup:
+        final args = settings.arguments as SetupArgs;
+        return MaterialPageRoute(builder: (_) => SetupScreen(args: args));
+      case Routes.login:
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case Routes.home:
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      default:
+        return MaterialPageRoute(builder: (_) => const WelcomeScreen());
+    }
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class AuthController extends ChangeNotifier {
+  AuthController({required this.apiClient});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  final ApiClient apiClient;
+  User? user;
+  bool isBusy = false;
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  Future<void> bootstrap() async {
+    if (isBusy) {
+      return;
+    }
+    isBusy = true;
+    notifyListeners();
+    try {
+      final hasSession = await apiClient.hasSession();
+      if (!hasSession) {
+        user = null;
+        return;
+      }
+      user = await apiClient.me();
+    } catch (_) {
+      user = null;
+      await apiClient.logout();
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
 
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  Future<void> logout() async {
+    isBusy = true;
+    notifyListeners();
+    try {
+      await apiClient.logout();
+      user = null;
+    } finally {
+      isBusy = false;
+      notifyListeners();
+    }
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final controller = context.read<AuthController>();
+      await controller.bootstrap();
+      if (!mounted) {
+        return;
+      }
+      if (controller.user != null) {
+        Navigator.pushNamedAndRemoveUntil(
+            context, Routes.home, (route) => false);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(
+            context, Routes.welcome, (route) => false);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+    return const Scaffold(
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Icon(Icons.school_rounded, size: 84, color: Colors.green),
+              const SizedBox(height: 24),
+              const Text(
+                'Crownbird E-Counselling',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Secure student onboarding and access to counselling support.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.black87),
+              ),
+              const SizedBox(height: 32),
+              FilledButton.icon(
+                onPressed: () => Navigator.pushNamed(context, Routes.phone),
+                icon: const Icon(Icons.arrow_forward_rounded),
+                label: const Text('Continue'),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, Routes.login),
+                child: const Text('Already have an account? Log in'),
+              ),
+            ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+class PhoneScreen extends StatefulWidget {
+  const PhoneScreen({super.key});
+
+  @override
+  State<PhoneScreen> createState() => _PhoneScreenState();
+}
+
+class _PhoneScreenState extends State<PhoneScreen> {
+  final _controller = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final value = _controller.text.trim();
+    final normalized = normalizeNgPhone(value);
+    if (normalized == null) {
+      setState(() =>
+          _error = 'Enter a valid Nigerian mobile number, e.g. 08031234567.');
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      final api = context.read<AuthController>().apiClient;
+      final result = await api.requestOtp(normalized);
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamed(
+        context,
+        Routes.otp,
+        arguments: OtpArgs(
+          phoneNumber: normalized,
+          requestId: result.requestId,
+          resendAfter: result.resendAfter,
+          message: result.message,
+        ),
+      );
+    } on ApiException catch (error) {
+      setState(() => _error = error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Phone verification')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Enter your phone number',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                  'We will send a one-time code to verify your account.'),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _controller,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Phone number',
+                  hintText: '0803 123 4567',
+                  border: const OutlineInputBorder(),
+                  errorText: _error,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Send code'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OtpScreen extends StatefulWidget {
+  const OtpScreen({required this.args, super.key});
+
+  final OtpArgs args;
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  final _controller = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final code = _controller.text.trim();
+    final validationError = otpError(code);
+    if (validationError != null) {
+      setState(() => _error = validationError);
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      final api = context.read<AuthController>().apiClient;
+      final result = await api.verifyOtp(
+        phoneNumber: widget.args.phoneNumber,
+        requestId: widget.args.requestId,
+        code: code,
+      );
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamed(
+        context,
+        Routes.setup,
+        arguments: SetupArgs(setupToken: result.setupToken),
+      );
+    } on ApiException catch (error) {
+      setState(() => _error = error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Verify code')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Enter the 6-digit code',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              Text(widget.args.message),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  labelText: 'Verification code',
+                  border: const OutlineInputBorder(),
+                  errorText: _error,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Verify code'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SetupScreen extends StatefulWidget {
+  const SetupScreen({required this.args, super.key});
+
+  final SetupArgs args;
+
+  @override
+  State<SetupScreen> createState() => _SetupScreenState();
+}
+
+class _SetupScreenState extends State<SetupScreen> {
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _username.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final usernameErrorValue = usernameError(_username.text);
+    final passwordErrorValue = passwordError(_password.text);
+    final confirmError = confirmPasswordError(_password.text, _confirm.text);
+    if (usernameErrorValue != null ||
+        passwordErrorValue != null ||
+        confirmError != null) {
+      setState(() =>
+          _error = usernameErrorValue ?? passwordErrorValue ?? confirmError);
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      final auth = context.read<AuthController>();
+      final session = await auth.apiClient.setupAccount(
+        setupToken: widget.args.setupToken,
+        username: _username.text.trim(),
+        password: _password.text,
+      );
+      auth.user = session.user;
+      auth.notifyListeners();
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamedAndRemoveUntil(context, Routes.home, (route) => false);
+    } on ApiException catch (error) {
+      setState(() => _error = error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Account setup')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ListView(
+            children: [
+              const Text(
+                'Create your account',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _username,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: const OutlineInputBorder(),
+                  errorText: _error,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirm,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Create account'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _username = TextEditingController(text: 'student1');
+  final _password = TextEditingController(text: 'Password123!');
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _username.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final userError = usernameError(_username.text);
+    final passError = passwordError(_password.text);
+    if (userError != null || passError != null) {
+      setState(() => _error = userError ?? passError);
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+
+    try {
+      final auth = context.read<AuthController>();
+      final session = await auth.apiClient.login(
+        username: _username.text.trim(),
+        password: _password.text,
+      );
+      auth.user = session.user;
+      auth.notifyListeners();
+      if (!mounted) {
+        return;
+      }
+      Navigator.pushNamedAndRemoveUntil(context, Routes.home, (route) => false);
+    } on ApiException catch (error) {
+      setState(() => _error = error.message);
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: ListView(
+            children: [
+              const Text(
+                'Welcome back',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                controller: _username,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: const OutlineInputBorder(),
+                  errorText: _error,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: _busy ? null : _submit,
+                child: _busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Log in'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthController>();
+    final user = auth.user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await auth.logout();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, Routes.welcome, (route) => false);
+              }
+            },
+            icon: const Icon(Icons.logout_rounded),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Welcome',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                user?.username ?? 'Student',
+                style:
+                    const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 24),
+              const Card(
+                child: ListTile(
+                  leading: Icon(Icons.school_rounded),
+                  title: Text('Student portal'),
+                  subtitle: Text('Your counselling experience is ready.'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
