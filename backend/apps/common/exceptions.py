@@ -33,10 +33,6 @@ class ApiError(APIException):
         self.extra = extra or {}
         super().__init__(detail=self.message)
 
-    @property
-    def detail(self):
-        return self.message
-
 
 def error_body(code, message, fields=None, **extra):
     payload = {"error": {"code": code, "message": message}}
