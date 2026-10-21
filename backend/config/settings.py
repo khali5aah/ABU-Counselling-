@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import corsheaders
+import corsheaders.defaults
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
