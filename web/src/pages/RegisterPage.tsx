@@ -88,14 +88,14 @@ export function RegisterPage() {
           <div className="brand-mark" aria-hidden="true">C</div>
           <div>
             <p className="eyebrow">CHDC STUDENT PORTAL</p>
-            <h1 id="page-title">Crownbird E-Counselling</h1>
+            <h1 id="page-title">CHDC E-Counselling</h1>
             <p className="subtitle">CHDC student registration</p>
           </div>
         </header>
 
         <div className="section-heading">
           <span className="section-index">01</span>
-          <div><h2>Student details</h2><p>Register to continue in the Crownbird mobile app.</p></div>
+          <div><h2>Student details</h2><p>Register to continue in the CHDC E-Counselling mobile app.</p></div>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>

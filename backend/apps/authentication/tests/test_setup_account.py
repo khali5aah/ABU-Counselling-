@@ -26,7 +26,9 @@ def test_setup_account_success_and_token_reuse(api_client, registration, sent_co
 
     assert response.status_code == 201
     assert response.data["user"]["username"] == "amina_b"
-    assert response.data["user"]["first_name"] == "Amina"
+    assert response.data["user"]["phone_number"] == "+2348031234567"
+    assert "first_name" not in response.data["user"]
+    assert "last_name" not in response.data["user"]
     assert User.objects.filter(registration=registration).exists()
 
     reused = api_client.post(

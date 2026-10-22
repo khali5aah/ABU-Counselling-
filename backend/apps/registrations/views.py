@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from apps.common.phone import mask_phone
 from apps.registrations.serializers import RegistrationCreateSerializer, RegistrationResponseSerializer
 
-logger = logging.getLogger("crownbird.registrations")
+logger = logging.getLogger("chdc.registrations")
 
 
 class RegistrationCreateView(APIView):

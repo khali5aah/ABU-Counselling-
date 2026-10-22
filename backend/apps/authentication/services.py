@@ -30,7 +30,7 @@ from apps.common.exceptions import (
 from apps.common.phone import mask_phone, phone_hash
 from apps.registrations.models import StudentRegistration
 
-logger = logging.getLogger("crownbird")
+logger = logging.getLogger("chdc")
 GENERIC_OTP_MESSAGE = "If this number is registered and not yet set up, a verification code has been sent by SMS."
 
 

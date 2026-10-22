@@ -3,9 +3,11 @@ import logging
 import requests
 from django.conf import settings
 
-crownbird_logger = logging.getLogger("crownbird")
-crownbird_logger.propagate = True
-logger = logging.getLogger("crownbird.otp")
+from apps.authentication.otp.dev_codes import remember_code
+
+chdc_logger = logging.getLogger("chdc")
+chdc_logger.propagate = True
+logger = logging.getLogger("chdc.otp")
 logger.propagate = True
 
 
@@ -13,7 +15,7 @@ class OtpDeliveryError(Exception):
     pass
 
 
-SMS_TEMPLATE = "Your Crownbird verification code is {code}. It expires in 5 minutes. Do not share it with anyone."
+SMS_TEMPLATE = "Your CHDC E-Counselling verification code is {code}. It expires in 5 minutes. Do not share it with anyone."
 
 
 class BaseOtpProvider:
@@ -24,6 +26,7 @@ class BaseOtpProvider:
 class ConsoleOtpProvider(BaseOtpProvider):
     def send_code(self, phone_e164: str, code: str) -> None:
         logger.warning("[DEV OTP] phone=%s code=%s", phone_e164, code)
+        remember_code(phone_e164, code)
 
 
 class TermiiOtpProvider(BaseOtpProvider):

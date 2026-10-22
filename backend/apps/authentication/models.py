@@ -61,6 +61,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def last_name(self):
         return self.registration.last_name if self.registration else ""
 
+    @property
+    def phone_number(self):
+        return self.registration.phone_number if self.registration else ""
+
     def __str__(self):
         return self.username
 

@@ -39,9 +39,8 @@ class LogoutSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    first_name = serializers.ReadOnlyField()
-    last_name = serializers.ReadOnlyField()
+    phone_number = serializers.ReadOnlyField()
 
     class Meta:
         model = User
-        fields = ["id", "username", "first_name", "last_name", "date_joined"]
+        fields = ["id", "username", "phone_number", "date_joined"]

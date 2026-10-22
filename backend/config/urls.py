@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from apps.authentication.views import DevOtpCodesView
 from apps.common import views
 
 urlpatterns = [
@@ -9,6 +10,7 @@ urlpatterns = [
     path("api/v1/health/", views.health),
     path("api/v1/registrations/", include("apps.registrations.urls")),
     path("api/v1/auth/", include("apps.authentication.urls")),
+    path("api/v1/dev/otp-codes/", DevOtpCodesView.as_view()),
     path("api/v1/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
 ]

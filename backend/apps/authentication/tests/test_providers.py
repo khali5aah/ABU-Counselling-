@@ -22,7 +22,7 @@ def test_termii_provider_raises_without_exposing_secret(monkeypatch):
     monkeypatch.setattr("apps.authentication.otp.providers.requests.post", fake_post)
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_BASE_URL", "https://api.ng.termii.com/api/sms/send")
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_API_KEY", "secret-key")
-    monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_SENDER_ID", "Crownbird")
+    monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_SENDER_ID", "CHDC")
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_CHANNEL", "dnd")
 
     provider = TermiiOtpProvider()
@@ -42,7 +42,7 @@ def test_termii_provider_raises_on_http_failure(monkeypatch):
     monkeypatch.setattr("apps.authentication.otp.providers.requests.post", lambda *a, **k: FakeResponse())
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_BASE_URL", "https://api.ng.termii.com")
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_API_KEY", "secret-key")
-    monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_SENDER_ID", "Crownbird")
+    monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_SENDER_ID", "CHDC")
     monkeypatch.setattr("apps.authentication.otp.providers.settings.TERMII_CHANNEL", "dnd")
 
     with pytest.raises(OtpDeliveryError):
@@ -51,6 +51,6 @@ def test_termii_provider_raises_on_http_failure(monkeypatch):
 
 def test_console_provider_logs_dev_code(caplog):
     provider = ConsoleOtpProvider()
-    with caplog.at_level(logging.WARNING, logger="crownbird.otp"):
+    with caplog.at_level(logging.WARNING, logger="chdc.otp"):
         provider.send_code("+2348031234567", "123456")
     assert "[DEV OTP]" in caplog.text

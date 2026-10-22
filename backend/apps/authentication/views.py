@@ -19,8 +19,11 @@ from apps.authentication.serializers import (
     SetupAccountSerializer,
     UserSerializer,
 )
+from apps.authentication.otp.dev_codes import dev_codes_enabled, recent_codes
 from apps.authentication.services import issue_tokens, request_otp, setup_account, verify_otp
 from apps.common.exceptions import InvalidCredentialsError, InvalidOtpError, SetupTokenInvalidError
+from apps.common.phone import InvalidPhoneNumber, normalize_ng_phone
+from apps.common.views import not_found
 
 
 class PublicAPIView(APIView):
@@ -121,3 +124,24 @@ class LogoutView(APIView):
         except TokenError:
             pass
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema(exclude=True)
+class DevOtpCodesView(APIView):
+    """Development only: recent console OTP codes, so testers can read them from the web app."""
+
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
+
+    def get(self, request):
+        if not dev_codes_enabled():
+            return not_found(request)
+        phone = None
+        raw_phone = request.query_params.get("phone_number")
+        if raw_phone:
+            try:
+                phone = normalize_ng_phone(raw_phone)
+            except InvalidPhoneNumber:
+                return Response({"codes": []}, status=status.HTTP_200_OK)
+        return Response({"codes": recent_codes(phone)}, status=status.HTTP_200_OK)

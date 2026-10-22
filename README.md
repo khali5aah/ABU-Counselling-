@@ -1,6 +1,6 @@
-# Crownbird E-Counselling
+# CHDC E-Counselling
 
-Crownbird E-Counselling monorepo for the counselling platform backend, web app, and mobile app.
+CHDC E-Counselling monorepo for the counselling platform backend, web app, and mobile app.
 
 ## Repository structure
 
@@ -39,7 +39,13 @@ python manage.py runserver 0.0.0.0:8000
 pytest
 ```
 
-To inspect console OTP codes:
+To see console OTP codes as they are sent (Windows PowerShell):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\otp.ps1
+```
+
+On macOS/Linux:
 
 ```bash
 docker compose logs -f api | grep "DEV OTP"

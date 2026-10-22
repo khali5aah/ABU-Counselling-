@@ -157,7 +157,7 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Crownbird E-Counselling API",
+    "TITLE": "CHDC E-Counselling API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
@@ -190,7 +190,7 @@ LOGGING = {
     },
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "verbose"}},
     "root": {"handlers": ["console"], "level": "INFO"},
-    "loggers": {"crownbird": {"handlers": ["console"], "level": "INFO", "propagate": False}},
+    "loggers": {"chdc": {"handlers": ["console"], "level": "INFO", "propagate": False}},
 }
 
 if not DEBUG:

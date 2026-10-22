@@ -74,9 +74,13 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .next-steps ol { display: grid; gap: 15px; margin: 0; padding-left: 27px; }
 .next-steps li { padding-left: 5px; color: var(--text); font-size: 13px; line-height: 1.5; }
 .next-steps li::marker { color: #9a7c20; font-weight: 700; }
-.download-button { min-height: 40px; margin-top: 8px; font-size: 13px; }
+.download-button { display: flex; width: fit-content; min-height: 40px; margin-top: 10px; font-size: 13px; }
 .step-detail { margin: 5px 0 0; color: var(--muted); }
 .expiry-note { margin: 18px 0 0; padding: 12px 13px; border-radius: 5px; background: #fff8e5; color: #59440b; font-size: 12px; }
+.dev-otp { margin: 18px 0 0; padding: 14px 16px; border: 1px dashed #9a7c20; border-radius: 6px; background: #fffdf5; text-align: center; }
+.dev-otp-label { margin: 0; color: #59440b; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.dev-otp-code { margin: 6px 0 2px; color: var(--primary); font-size: 30px; font-weight: 700; letter-spacing: 0.25em; font-variant-numeric: tabular-nums; }
+.dev-otp-hint { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
 .button-secondary { width: 100%; padding: 0 16px; border: 1px solid #aeb8c4; background: white; color: var(--primary); }
 .button-secondary:hover { background: #f2f5f8; }
 .not-found-panel h1 { margin: 8px 0 20px; color: var(--primary); font-family: Georgia, serif; font-size: 28px; }
