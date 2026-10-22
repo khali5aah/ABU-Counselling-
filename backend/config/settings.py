@@ -62,16 +62,11 @@ MIDDLEWARE = [
 ]
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "crownbird"),
-        "USER": os.getenv("POSTGRES_USER", "crownbird"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "crownbird"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 AUTH_USER_MODEL = "authentication.User"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
