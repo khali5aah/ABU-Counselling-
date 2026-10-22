@@ -106,7 +106,7 @@ export function RegisterPage() {
             <TextField name="last_name" label="Last name" autoComplete="family-name" value={values.last_name}
               onChange={(event) => updateField('last_name', event.target.value)}
               onBlur={(event) => validateField('last_name', event.target.value)} error={errors.last_name} />
-            <TextField name="matric_number" label="Matric number" placeholder="e.g. CHDC/0001" autoCapitalize="characters" value={values.matric_number}
+            <TextField name="matric_number" label="Matric number" placeholder="U25COXXXX" autoCapitalize="characters" value={values.matric_number}
               onChange={(event) => updateField('matric_number', event.target.value)}
               onBlur={(event) => validateField('matric_number', event.target.value)} error={errors.matric_number} />
             <TextField name="phone_number" label="Phone number" type="tel" inputMode="tel" autoComplete="tel"
