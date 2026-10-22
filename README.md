@@ -53,6 +53,26 @@ See web/README.md
 
 See mobile/README.md
 
+## Backend: registration
+
+Endpoint:
+
+- POST /api/v1/registrations/
+
+Example request:
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/registrations/ \
+  -H "Content-Type: application/json" \
+  -d '{"first_name":"Amina","last_name":"Bello","matric_number":"chdc/0001","phone_number":"08031234567"}'
+```
+
+Seed command:
+
+```bash
+python manage.py seed_registration --first-name Demo --last-name Student --matric CHDC/DEMO1 --phone 08031234567
+```
+
 ## Contracts and decisions
 
 - [docs/api-contract.md](docs/api-contract.md)
