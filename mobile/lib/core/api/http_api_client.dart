@@ -82,7 +82,7 @@ class HttpApiClient implements ApiClient {
   Future<OtpRequestResult> requestOtp(String phoneNumber) async =>
       OtpRequestResult.fromJson(await _request(
         'POST',
-        '/api/v1/auth/otp/request/',
+        '/auth/otp/request/',
         body: {'phone_number': phoneNumber},
       ));
 
@@ -94,7 +94,7 @@ class HttpApiClient implements ApiClient {
   }) async =>
       OtpVerifyResult.fromJson(await _request(
         'POST',
-        '/api/v1/auth/otp/verify/',
+        '/auth/otp/verify/',
         body: {
           'phone_number': phoneNumber,
           'request_id': requestId,
@@ -110,7 +110,7 @@ class HttpApiClient implements ApiClient {
   }) async {
     final session = AuthSession.fromJson(await _request(
       'POST',
-      '/api/v1/auth/setup-account/',
+      '/auth/setup-account/',
       body: {
         'setup_token': setupToken,
         'username': username.trim().toLowerCase(),
@@ -128,7 +128,7 @@ class HttpApiClient implements ApiClient {
   }) async {
     final session = AuthSession.fromJson(await _request(
       'POST',
-      '/api/v1/auth/login/',
+      '/auth/login/',
       body: {'username': username.trim().toLowerCase(), 'password': password},
     ));
     await _storage.save(access: session.access, refresh: session.refresh);
@@ -140,7 +140,7 @@ class HttpApiClient implements ApiClient {
     var access = await _storage.readAccess();
     try {
       return User.fromJson(
-        await _request('GET', '/api/v1/auth/me/', accessToken: access ?? ''),
+        await _request('GET', '/auth/me/', accessToken: access ?? ''),
       );
     } on ApiException catch (error) {
       if (error.statusCode != 401 ||
@@ -151,7 +151,7 @@ class HttpApiClient implements ApiClient {
       await _refresh();
       access = await _storage.readAccess();
       return User.fromJson(
-        await _request('GET', '/api/v1/auth/me/', accessToken: access ?? ''),
+        await _request('GET', '/auth/me/', accessToken: access ?? ''),
       );
     }
   }
@@ -173,7 +173,7 @@ class HttpApiClient implements ApiClient {
       if (refreshToken == null) throw _sessionExpired;
       final response = await _request(
         'POST',
-        '/api/v1/auth/refresh/',
+        '/auth/refresh/',
         body: {'refresh': refreshToken},
       );
       await _storage.save(
@@ -194,7 +194,7 @@ class HttpApiClient implements ApiClient {
         final access = await _storage.readAccess();
         await _request(
           'POST',
-          '/api/v1/auth/logout/',
+          '/auth/logout/',
           body: {'refresh': refresh},
           accessToken: access ?? '',
         );

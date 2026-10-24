@@ -64,11 +64,11 @@ MIDDLEWARE = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "crownbird"),
-        "USER": os.getenv("POSTGRES_USER", "crownbird"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "crownbird"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": os.getenv("DB_NAME", "crownbird"),
+        "USER": os.getenv("DB_USER", "crownbird"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "crownbird"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
@@ -199,3 +199,5 @@ if not DEBUG:
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
