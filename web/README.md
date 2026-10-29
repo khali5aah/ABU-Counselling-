@@ -1,85 +1,55 @@
-# CHDC Student Registration
+# CHDC Student Registration web portal
 
-## Prerequisites
+This React + TypeScript + Vite app lets students submit their name, matric
+number, and Nigerian phone number to the backend registration API. The
+confirmation page can link to the mobile APK.
 
-- Node.js 20 or newer and npm
+## Requirements
+
+- Node.js 20+ and npm
+- Django API at `http://localhost:8000` for live mode
 
 ## Run locally
 
-```sh
+```bash
 cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-The app runs at http://localhost:5173. Mock mode is enabled by default with `VITE_USE_MOCK=true`; requests are simulated and nothing is saved. For the live API, set `VITE_USE_MOCK=false` and `VITE_API_BASE_URL=http://<backend-LAN-IP>:8000` in `.env.local`.
+Vite serves the portal at `http://localhost:5173`. Mock mode is enabled in the
+example configuration and simulates responses without saving anything.
 
-## Registration mock scenarios
+To use the API, set the following values in `.env.local`:
 
-| Input after normalization | Result |
-|---|---|
-| Matric number `CHDC/DUP` | Duplicate matric number |
-| Phone `+2348000000001` | Duplicate phone number |
-| Phone `+2348000000500` | Server error |
-| Any other valid registration | Registration succeeds |
+```dotenv
+VITE_USE_MOCK=false
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+Optional variables are `VITE_APP_DOWNLOAD_URL` (APK download URL) and
+`VITE_SHOW_DEV_OTP` (development-only display for console OTP codes; keep
+disabled outside local testing).
+
+## Routes and data flow
+
+- `/register` — registration form
+- `/registered` — successful registration confirmation
+- Other paths — not-found page
+- Live requests use `POST /api/v1/registrations/`; the API contract defines
+  normalization, validation, duplicate handling, and error responses.
+
+The portal does not provide mobile account setup or counselling case
+management. The case feature is a separate, local-only mobile prototype.
 
 ## Checks
 
-```sh
+```bash
 npm test
 npm run lint
 npm run build
-```# React + TypeScript + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+See the [user guide](../docs/user-guide.md),
+[API contract](../docs/api-contract.md), and
+[technical overview](../docs/technical-overview.md).
