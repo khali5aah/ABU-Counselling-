@@ -8,13 +8,19 @@ import '../../core/models/user.dart';
 enum AuthStatus { unknown, unauthenticated, authenticated }
 
 class AuthController extends ChangeNotifier {
-  AuthController(this._api);
+  // Make api optional. If null, operations can safely no-op or return mock states.
+  AuthController([ApiClient? api]) : _api = api;
 
-  final ApiClient _api;
+  final ApiClient? _api;
   AuthStatus status = AuthStatus.unknown;
   User? user;
 
   Future<void> bootstrap() async {
+    if (_api == null) {
+      status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
     if (!await _api.hasSession()) {
       status = AuthStatus.unauthenticated;
       notifyListeners();
@@ -38,13 +44,16 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> refreshUser() async {
+    if (_api == null) return;
     user = await _api.me();
     status = AuthStatus.authenticated;
     notifyListeners();
   }
 
   Future<void> logout() async {
-    await _api.logout();
+    if (_api != null) {
+      await _api.logout();
+    }
     user = null;
     status = AuthStatus.unauthenticated;
     notifyListeners();

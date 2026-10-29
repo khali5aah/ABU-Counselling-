@@ -23,12 +23,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _bootstrap() async {
     final controller = context.read<AuthController>();
     await controller.bootstrap();
+    
+    // Clear session so it lands on Welcome Screen instead of auto-authenticating
+    await controller.logout();
+
     if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(
-      controller.status == AuthStatus.authenticated
-          ? Routes.home
-          : Routes.welcome,
-    );
+    Navigator.of(context).pushReplacementNamed(Routes.welcome);
   }
 
   @override

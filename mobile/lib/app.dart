@@ -8,7 +8,7 @@ import 'features/auth/screens/otp_screen.dart';
 import 'features/auth/screens/phone_entry_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/welcome_screen.dart';
-import 'features/home/home_screen.dart';
+import 'features/navigation/main_tab_screen.dart';
 
 class ChdcApp extends StatelessWidget {
   const ChdcApp({super.key});
@@ -39,7 +39,7 @@ class ChdcApp extends StatelessWidget {
         page = const LoginScreen();
         break;
       case Routes.home:
-        page = const HomeScreen();
+        page = const MainTabScreen();
         break;
       default:
         return _notFound(settings);
@@ -63,7 +63,7 @@ class ChdcApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final app = MaterialApp(
+    return MaterialApp(
       title: 'CHDC E-Counselling',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -73,16 +73,22 @@ class ChdcApp extends StatelessWidget {
           error: const Color(0xFFB3261E),
         ),
       ),
-      initialRoute: Routes.splash,
+      initialRoute: Routes.splash, // <--- Set to Splash Screen initially
       onGenerateRoute: _onGenerateRoute,
-    );
-    return Env.useMock
-        ? Banner(
-            message: 'MOCK',
-            location: BannerLocation.topEnd,
+      builder: (context, child) {
+        if (Env.useMock && child != null) {
+          return Directionality(
             textDirection: TextDirection.ltr,
-            child: app,
-          )
-        : app;
+            child: Banner(
+              message: 'MOCK',
+              location: BannerLocation.topEnd,
+              textDirection: TextDirection.ltr,
+              child: child,
+            ),
+          );
+        }
+        return child ?? const SizedBox.shrink();
+      },
+    );
   }
 }
