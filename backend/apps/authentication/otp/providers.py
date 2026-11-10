@@ -1,0 +1,86 @@
+import logging
+import math
+
+import requests
+from django.conf import settings
+
+from apps.authentication.otp.dev_codes import remember_code
+
+chdc_logger = logging.getLogger("chdc")
+chdc_logger.propagate = True
+logger = logging.getLogger("chdc.otp")
+logger.propagate = True
+
+
+class OtpDeliveryError(Exception):
+    pass
+
+
+SMS_TEMPLATE = "Your CHDC E-Counselling {code_purpose} is {code}. It expires in {expires_in_minutes} minutes. Do not share it with anyone."
+
+
+class BaseOtpProvider:
+    def send_code(
+        self,
+        phone_e164: str,
+        code: str,
+        expires_in_seconds: int = 300,
+        purpose: str = "verification code",
+    ) -> None:
+        raise NotImplementedError
+
+
+class ConsoleOtpProvider(BaseOtpProvider):
+    def send_code(
+        self,
+        phone_e164: str,
+        code: str,
+        expires_in_seconds: int = 300,
+        purpose: str = "verification code",
+    ) -> None:
+        logger.warning("[DEV OTP] phone=%s code=%s", phone_e164, code)
+        remember_code(phone_e164, code, expires_in_seconds)
+
+
+class TermiiOtpProvider(BaseOtpProvider):
+    def send_code(
+        self,
+        phone_e164: str,
+        code: str,
+        expires_in_seconds: int = 300,
+        purpose: str = "verification code",
+    ) -> None:
+        base_url = settings.TERMII_BASE_URL.rstrip("/")
+        url = base_url if base_url.endswith("/api/sms/send") else f"{base_url}/api/sms/send"
+        payload = {
+            "api_key": settings.TERMII_API_KEY,
+            "to": phone_e164.lstrip("+"),
+            "from": settings.TERMII_SENDER_ID,
+            "sms": SMS_TEMPLATE.format(
+                code=code,
+                code_purpose=purpose,
+                expires_in_minutes=max(1, math.ceil(expires_in_seconds / 60)),
+            ),
+            "type": "plain",
+            "channel": settings.TERMII_CHANNEL,
+        }
+        try:
+            response = requests.post(url, json=payload, timeout=10)
+        except requests.RequestException as exc:
+            raise OtpDeliveryError(f"Termii send failed: HTTP {exc}") from exc
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            raise OtpDeliveryError(f"Termii send failed: HTTP {response.status_code}") from exc
+
+        if response.status_code >= 400 or not data.get("message_id"):
+            raise OtpDeliveryError(f"Termii send failed: HTTP {response.status_code}")
+
+
+def get_otp_provider() -> BaseOtpProvider:
+    provider_map = {
+        "console": ConsoleOtpProvider,
+        "termii": TermiiOtpProvider,
+    }
+    return provider_map[settings.OTP_PROVIDER]()

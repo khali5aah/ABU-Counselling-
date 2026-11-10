@@ -11,6 +11,7 @@ const initialValues: RegistrationRequest = {
   last_name: '',
   matric_number: '',
   phone_number: '',
+  has_consented: false,
 }
 const fieldOrder: Array<keyof RegistrationRequest> = ['first_name', 'last_name', 'matric_number', 'phone_number']
 
@@ -27,7 +28,7 @@ export function RegisterPage() {
     setErrors((current) => ({ ...current, [name]: message }))
   }
 
-  function updateField(name: keyof RegistrationRequest, value: string) {
+  function updateField(name: keyof RegistrationRequest, value: string | boolean) {
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: undefined }))
     setAlert(undefined)
@@ -53,6 +54,7 @@ export function RegisterPage() {
         last_name: values.last_name.trim(),
         matric_number: values.matric_number.trim(),
         phone_number: values.phone_number.trim(),
+        has_consented: values.has_consented,
       })
       navigate('/registered', { state: response, replace: true })
     } catch (error) {
@@ -63,10 +65,14 @@ export function RegisterPage() {
         const extras: string[] = []
         for (const [name, messages] of Object.entries(error.fields)) {
           if (name === 'non_field_errors') continue
-          if (fieldOrder.includes(name as keyof RegistrationRequest)) matched[name as keyof RegistrationRequest] = messages[0]
-          else extras.push(...messages)
+          const field = fieldOrder.find((fieldName) => fieldName === name)
+          if (field) {
+            if (messages[0]) matched[field] = messages[0]
+          } else {
+            extras.push(...messages)
+          }
         }
-        setErrors((current) => ({ ...current, ...matched }))
+        setErrors(matched)
         setAlert([error.message, ...(error.fields.non_field_errors ?? []), ...extras].join(' '))
       } else if (error.code === 'rate_limited') {
         setAlert(error.retryAfter !== undefined
@@ -88,14 +94,14 @@ export function RegisterPage() {
           <div className="brand-mark" aria-hidden="true">C</div>
           <div>
             <p className="eyebrow">CHDC STUDENT PORTAL</p>
-            <h1 id="page-title">Crownbird E-Counselling</h1>
+            <h1 id="page-title">CHDC E-Counselling</h1>
             <p className="subtitle">CHDC student registration</p>
           </div>
         </header>
 
         <div className="section-heading">
           <span className="section-index">01</span>
-          <div><h2>Student details</h2><p>Register to continue in the Crownbird mobile app.</p></div>
+          <div><h2>Student details</h2><p>Register to continue in the CHDC E-Counselling mobile app.</p></div>
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
@@ -106,7 +112,7 @@ export function RegisterPage() {
             <TextField name="last_name" label="Last name" autoComplete="family-name" value={values.last_name}
               onChange={(event) => updateField('last_name', event.target.value)}
               onBlur={(event) => validateField('last_name', event.target.value)} error={errors.last_name} />
-            <TextField name="matric_number" label="Matric number" placeholder="e.g. CHDC/0001" autoCapitalize="characters" value={values.matric_number}
+            <TextField name="matric_number" label="Matric number" placeholder="U25COXXXX" autoCapitalize="characters" value={values.matric_number}
               onChange={(event) => updateField('matric_number', event.target.value)}
               onBlur={(event) => validateField('matric_number', event.target.value)} error={errors.matric_number} />
             <TextField name="phone_number" label="Phone number" type="tel" inputMode="tel" autoComplete="tel"

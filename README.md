@@ -1,6 +1,6 @@
-# Crownbird E-Counselling
+# CHDC E-Counselling
 
-Crownbird E-Counselling monorepo for the counselling platform backend, web app, and mobile app.
+CHDC E-Counselling monorepo for the counselling platform backend, web app, and mobile app.
 
 ## Repository structure
 
@@ -39,7 +39,13 @@ python manage.py runserver 0.0.0.0:8000
 pytest
 ```
 
-To inspect console OTP codes:
+To see console OTP codes as they are sent (Windows PowerShell):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\otp.ps1
+```
+
+On macOS/Linux:
 
 ```bash
 docker compose logs -f api | grep "DEV OTP"
@@ -52,6 +58,26 @@ See web/README.md
 ## Mobile
 
 See mobile/README.md
+
+## Backend: registration
+
+Endpoint:
+
+- POST /api/v1/registrations/
+
+Example request:
+
+```bash
+curl -s -X POST http://localhost:8000/api/v1/registrations/ \
+  -H "Content-Type: application/json" \
+  -d '{"first_name":"Amina","last_name":"Bello","matric_number":"chdc/0001","phone_number":"08031234567"}'
+```
+
+Seed command:
+
+```bash
+python manage.py seed_registration --first-name Demo --last-name Student --matric CHDC/DEMO1 --phone 08031234567
+```
 
 ## Contracts and decisions
 

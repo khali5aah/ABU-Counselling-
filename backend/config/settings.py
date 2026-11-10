@@ -64,11 +64,13 @@ MIDDLEWARE = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "crownbird"),
-        "USER": os.getenv("POSTGRES_USER", "crownbird"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "crownbird"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "NAME": os.getenv("DB_NAME", os.getenv("POSTGRES_DB", "crownbird")),
+        "USER": os.getenv("DB_USER", os.getenv("POSTGRES_USER", "crownbird")),
+        "PASSWORD": os.getenv(
+            "DB_PASSWORD", os.getenv("POSTGRES_PASSWORD", "crownbird")
+        ),
+        "HOST": os.getenv("DB_HOST", os.getenv("POSTGRES_HOST", "localhost")),
+        "PORT": os.getenv("DB_PORT", os.getenv("POSTGRES_PORT", "5432")),
     }
 }
 
@@ -87,6 +89,7 @@ TIME_ZONE = "Africa/Lagos"
 USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 TEMPLATES = [
     {
@@ -114,9 +117,11 @@ CACHES = {
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_HEADERS = (*corsheaders.defaults.default_headers, "ngrok-skip-browser-warning")
 
-THROTTLE_REGISTRATION = os.getenv("THROTTLE_REGISTRATION", "5/minute")
-THROTTLE_OTP_REQUEST = os.getenv("THROTTLE_OTP_REQUEST", "3/minute")
-THROTTLE_OTP_VERIFY = os.getenv("THROTTLE_OTP_VERIFY", "5/minute")
+THROTTLE_REGISTRATION = os.getenv("THROTTLE_REGISTRATION", "10/minute")
+THROTTLE_OTP_REQUEST = os.getenv("THROTTLE_OTP_REQUEST", "10/minute")
+THROTTLE_OTP_VERIFY = os.getenv("THROTTLE_OTP_VERIFY", "10/minute")
+THROTTLE_PASSWORD_RESET_REQUEST = os.getenv("THROTTLE_PASSWORD_RESET_REQUEST", "10/minute")
+THROTTLE_PASSWORD_RESET_VERIFY = os.getenv("THROTTLE_PASSWORD_RESET_VERIFY", "10/minute")
 THROTTLE_SETUP = os.getenv("THROTTLE_SETUP", "10/minute")
 THROTTLE_LOGIN = os.getenv("THROTTLE_LOGIN", "10/minute")
 
@@ -140,6 +145,8 @@ REST_FRAMEWORK = {
         "registration": THROTTLE_REGISTRATION,
         "otp_request": THROTTLE_OTP_REQUEST,
         "otp_verify": THROTTLE_OTP_VERIFY,
+        "password_reset_request": THROTTLE_PASSWORD_RESET_REQUEST,
+        "password_reset_verify": THROTTLE_PASSWORD_RESET_VERIFY,
         "setup": THROTTLE_SETUP,
         "login": THROTTLE_LOGIN,
     },
@@ -157,14 +164,17 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Crownbird E-Counselling API",
+    "TITLE": "CHDC E-Counselling API",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
 OTP_PROVIDER = os.getenv("OTP_PROVIDER", "console").lower()
+OTP_DEV_CODE = os.getenv("OTP_DEV_CODE", "123456")
+OTP_DEV_TEST_PHONES = tuple(env_list("OTP_DEV_TEST_PHONES"))
 OTP_TTL_SECONDS = int(os.getenv("OTP_TTL_SECONDS", "300"))
-OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "5"))
+PASSWORD_RESET_OTP_TTL_SECONDS = 15 * 60
+OTP_MAX_ATTEMPTS = int(os.getenv("OTP_MAX_ATTEMPTS", "10"))
 OTP_RESEND_COOLDOWN_SECONDS = int(os.getenv("OTP_RESEND_COOLDOWN_SECONDS", "60"))
 OTP_MAX_REQUESTS_PER_PHONE_PER_HOUR = int(os.getenv("OTP_MAX_REQUESTS_PER_PHONE_PER_HOUR", "10"))
 SETUP_TOKEN_TTL_SECONDS = int(os.getenv("SETUP_TOKEN_TTL_SECONDS", "900"))
@@ -190,7 +200,7 @@ LOGGING = {
     },
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "verbose"}},
     "root": {"handlers": ["console"], "level": "INFO"},
-    "loggers": {"crownbird": {"handlers": ["console"], "level": "INFO", "propagate": False}},
+    "loggers": {"chdc": {"handlers": ["console"], "level": "INFO", "propagate": False}},
 }
 
 if not DEBUG:
@@ -199,3 +209,5 @@ if not DEBUG:
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"

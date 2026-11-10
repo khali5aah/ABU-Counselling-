@@ -1,0 +1,129 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.9"
+          channel: stable
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Validate release version and configuration
+        id: release
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEB_REGISTRATION_URL: ${{ vars.WEB_REGISTRATION_URL }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          pubspec_version="$(awk '/^version:/ { print $2; exit }' mobile/pubspec.yaml)"
+          pubspec_name="${pubspec_version%%+*}"
+          pubspec_code="${pubspec_version##*+}"
+
+          if [[ "$version" != "$pubspec_name" || "$pubspec_code" == "$pubspec_version" ]]; then
+            echo "Release tag must match the name in mobile/pubspec.yaml (version: $pubspec_version)." >&2
+            exit 1
+          fi
+          if [[ "$API_BASE_URL" != https://* || "$WEB_REGISTRATION_URL" != https://* ]]; then
+            echo "Set API_BASE_URL and WEB_REGISTRATION_URL to HTTPS GitHub Actions variables." >&2
+            exit 1
+          fi
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "Configure all Android signing secrets before creating a release tag." >&2
+            exit 1
+          fi
+
+          echo "version_name=$version" >> "$GITHUB_OUTPUT"
+          echo "version_code=$pubspec_code" >> "$GITHUB_OUTPUT"
+
+      - name: Configure Android signing
+        working-directory: mobile/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+          cat > key.properties <<EOF
+          storeFile=upload-keystore.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          EOF
+
+      - name: Install Flutter dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze and test mobile app
+        working-directory: mobile
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build signed Android App Bundle
+        working-directory: mobile
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEB_REGISTRATION_URL: ${{ vars.WEB_REGISTRATION_URL }}
+        run: |
+          flutter build appbundle --release \
+            --build-name="${{ steps.release.outputs.version_name }}" \
+            --build-number="${{ steps.release.outputs.version_code }}" \
+            --dart-define=USE_MOCK=false \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=WEB_REGISTRATION_URL="$WEB_REGISTRATION_URL"
+
+      - name: Build signed Android APK
+        working-directory: mobile
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL }}
+          WEB_REGISTRATION_URL: ${{ vars.WEB_REGISTRATION_URL }}
+        run: |
+          flutter build apk --release \
+            --build-name="${{ steps.release.outputs.version_name }}" \
+            --build-number="${{ steps.release.outputs.version_code }}" \
+            --dart-define=USE_MOCK=false \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=WEB_REGISTRATION_URL="$WEB_REGISTRATION_URL"
+
+      - name: Create GitHub Release and upload Android builds
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          gh release view "$tag" >/dev/null 2>&1 ||
+            gh release create "$tag" \
+              --verify-tag \
+              --title "CHDC E-Counselling $tag" \
+              --generate-notes
+          gh release upload "$tag" \
+            mobile/build/app/outputs/flutter-apk/app-release.apk \
+            mobile/build/app/outputs/bundle/release/app-release.aab \
+            --clobber

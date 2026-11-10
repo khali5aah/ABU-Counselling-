@@ -3,10 +3,12 @@ export interface RegistrationRequest {
   last_name: string
   matric_number: string
   phone_number: string
+  has_consented?: boolean
 }
 
 export interface RegistrationResponse extends RegistrationRequest {
   created_at: string
+  signup_code?: string | null
 }
 
 export interface ApiErrorBody {

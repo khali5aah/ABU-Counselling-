@@ -1,4 +1,4 @@
-# Crownbird Student Registration
+# CHDC Student Registration
 
 ## Prerequisites
 

@@ -10,11 +10,13 @@ describe('validateRegistration', () => {
   it('normalizes and accepts matric numbers', () => {
     expect(normalizeMatric('chdc/0001')).toBe('CHDC/0001')
     expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: 'chdc/0001', phone_number: '08031234567' }).matric_number).toBeUndefined()
+    expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: '1_!?abcde', phone_number: '08031234567' }).matric_number).toBeUndefined()
+    expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: 'ß12345678', phone_number: '08031234567' }).matric_number).toBeUndefined()
   })
   it('uses exact invalid field messages', () => {
     const errors = validateRegistration({ first_name: '123', last_name: 'Bello', matric_number: 'x', phone_number: 'bad' })
     expect(errors.first_name).toBe(NAME_ERROR)
     expect(errors.matric_number).toBe(MATRIC_ERROR)
-    expect(errors.phone_number).toBe('Enter a valid Nigerian mobile number, e.g. 08031234567.')
+    expect(errors.phone_number).toBe('Phone number must be exactly 11 digits.')
   })
 })

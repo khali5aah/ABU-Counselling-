@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 
 
 NAME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z' -]{0,49}$")
-MATRIC_PATTERN = re.compile(r"^[A-Z0-9/-]{3,30}$")
 USERNAME_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,29}$")
 
 
@@ -19,11 +18,11 @@ def normalize_name(value):
 
 def normalize_matric(value):
     if value is None:
-        raise ValidationError("Enter a valid matriculation number.")
-    text = str(value).strip().upper()
-    if not text or not MATRIC_PATTERN.fullmatch(text):
-        raise ValidationError("Enter a valid matriculation number.")
-    return text
+        raise ValidationError("Matric number must be exactly 9 characters.")
+    text = str(value).strip()
+    if len(text) != 9:
+        raise ValidationError("Matric number must be exactly 9 characters.")
+    return text.upper()
 
 
 def normalize_username(value):

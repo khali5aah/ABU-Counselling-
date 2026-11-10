@@ -1,4 +1,4 @@
-import { normalizeNgPhone } from '../lib/phone'
+import { normalizeLocalPhone } from '../lib/phone'
 import { normalizeMatric, normalizeName, validateRegistration } from '../lib/validation'
 import { ApiError, type RegistrationRequest, type RegistrationResponse } from './types'
 
@@ -13,20 +13,25 @@ export async function registerStudentMock(req: RegistrationRequest): Promise<Reg
   if (Object.keys(fields).length) {
     throw new ApiError(400, 'validation_error', 'Please correct the highlighted fields.', fields)
   }
+  if (!req.has_consented) {
+    throw new ApiError(400, 'validation_error', 'Please accept the privacy consent to proceed.', {
+      has_consented: ['You must accept the NDPR consent policy to proceed.'],
+    })
+  }
 
-  const phone = normalizeNgPhone(req.phone_number)!
+  const phone = normalizeLocalPhone(req.phone_number)!
   const matric = normalizeMatric(req.matric_number)
-  if (matric === 'CHDC/DUP') {
+  if (matric === 'CHDC/DUP1') {
     throw new ApiError(409, 'duplicate', 'Some details are already registered.', {
       matric_number: ['This matric number is already registered.'],
     })
   }
-  if (phone === '+2348000000001') {
+  if (phone === '08000000001') {
     throw new ApiError(409, 'duplicate', 'Some details are already registered.', {
       phone_number: ['This phone number is already registered.'],
     })
   }
-  if (phone === '+2348000000500') {
+  if (phone === '08000000500') {
     throw new ApiError(500, 'server_error', 'Something went wrong. Please try again.')
   }
 

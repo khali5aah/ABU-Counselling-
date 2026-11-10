@@ -18,7 +18,7 @@ from rest_framework.exceptions import (
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
-logger = logging.getLogger("crownbird")
+logger = logging.getLogger("chdc")
 
 
 class ApiError(APIException):

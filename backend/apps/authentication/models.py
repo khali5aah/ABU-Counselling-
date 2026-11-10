@@ -61,5 +61,50 @@ class User(AbstractBaseUser, PermissionsMixin):
     def last_name(self):
         return self.registration.last_name if self.registration else ""
 
+    @property
+    def phone_number(self):
+        return self.registration.phone_number if self.registration else ""
+
     def __str__(self):
         return self.username
+
+
+class PhoneVerification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    registration = models.ForeignKey(
+        "registrations.StudentRegistration",
+        on_delete=models.CASCADE,
+        related_name="phone_verifications",
+    )
+    phone_number = models.CharField(max_length=14, db_index=True)
+    code_hash = models.CharField(max_length=64)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    max_attempts = models.PositiveSmallIntegerField()
+    verified_at = models.DateTimeField(null=True, blank=True)
+    invalidated_at = models.DateTimeField(null=True, blank=True)
+    setup_token_hash = models.CharField(max_length=64, null=True, blank=True, unique=True)
+    setup_token_expires_at = models.DateTimeField(null=True, blank=True)
+    setup_token_used_at = models.DateTimeField(null=True, blank=True)
+    is_registration_code = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "phone_verifications"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.phone_number} ({self.registration})"
+
+
+class PasswordReset(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    phone_number = models.CharField(max_length=14, db_index=True)
+    otp_code = models.CharField(max_length=64)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    attempts = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        db_table = "password_resets"
+        ordering = ["-expires_at"]
