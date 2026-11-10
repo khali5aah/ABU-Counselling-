@@ -13,7 +13,7 @@ const initialValues: RegistrationRequest = {
   phone_number: '',
   has_consented: false,
 }
-const fieldOrder: Array<keyof RegistrationRequest> = ['first_name', 'last_name', 'matric_number', 'phone_number', 'has_consented']
+const fieldOrder: Array<keyof RegistrationRequest> = ['first_name', 'last_name', 'matric_number', 'phone_number']
 
 export function RegisterPage() {
   const [values, setValues] = useState(initialValues)
@@ -42,11 +42,6 @@ export function RegisterPage() {
     const firstInvalid = fieldOrder.find((name) => nextErrors[name])
     if (firstInvalid) {
       document.getElementById(firstInvalid)?.focus()
-      return
-    }
-    if (!values.has_consented) {
-      setErrors({ ...nextErrors, has_consented: 'You must accept the NDPR consent policy to proceed.' })
-      document.querySelector<HTMLInputElement>('.consent-field input')?.focus()
       return
     }
 
@@ -125,18 +120,6 @@ export function RegisterPage() {
               onChange={(event) => updateField('phone_number', event.target.value)}
               onBlur={(event) => validateField('phone_number', event.target.value)} error={errors.phone_number} />
           </div>
-          <label className="consent-field">
-            <input
-              id="has_consented"
-              type="checkbox"
-              checked={values.has_consented ?? false}
-              aria-invalid={Boolean(errors.has_consented)}
-              aria-describedby={errors.has_consented ? 'consent-error' : undefined}
-              onChange={(event) => updateField('has_consented', event.target.checked)}
-            />
-            <span>I agree to the processing of my personal data in accordance with the Nigeria Data Protection Regulation (NDPR) privacy policy.</span>
-          </label>
-          {errors.has_consented && <p className="field-error" id="consent-error">{errors.has_consented}</p>}
           {alert && <Alert type="error">{alert}</Alert>}
           <button className="button button-primary submit-button" type="submit" disabled={pending} aria-busy={pending}>
             {pending ? 'Registering…' : 'Register'}{!pending && <span aria-hidden="true">→</span>}

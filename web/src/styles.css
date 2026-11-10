@@ -53,8 +53,6 @@ a, button { -webkit-tap-highlight-color: transparent; }
 .submit-button span { font-size: 18px; font-weight: 400; }
 .privacy-note { display: flex; align-items: center; gap: 7px; margin: 14px 0 0; color: #777d84; font-size: 11px; }
 .privacy-note span { color: var(--success); font-size: 9px; }
-.consent-field { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; color: #35383d; font-size: 13px; line-height: 1.5; cursor: pointer; }
-.consent-field input { width: 18px; height: 18px; flex: 0 0 18px; margin: 1px 0 0; accent-color: var(--primary); }
 .side-note { align-self: center; max-width: 210px; color: var(--primary); }
 .side-note-rule { width: 48px; height: 3px; display: block; margin-bottom: 19px; background: var(--accent); }
 .side-note p { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 23px; line-height: 1.35; }

@@ -19,11 +19,19 @@ function fillValid(matric = 'CHDC/0001') {
   fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Bello' } })
   fireEvent.change(screen.getByLabelText('Matric number'), { target: { value: matric } })
   fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '08031234567' } })
-  fireEvent.click(screen.getByRole('checkbox'))
 }
 
 describe('RegisterPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.spyOn(registrations, 'registerStudent').mockResolvedValue({
+      first_name: 'Amina',
+      last_name: 'Bello',
+      matric_number: 'CHDC/0001',
+      phone_number: '08031234567',
+      created_at: new Date(0).toISOString(),
+    })
+  })
   it('shows required field errors without navigating', () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
@@ -46,6 +54,10 @@ describe('RegisterPage', () => {
     expect(screen.queryByText(/correct the highlighted/i)).not.toBeInTheDocument()
   })
   it('shows duplicate matric field error and alert', async () => {
+    vi.spyOn(registrations, 'registerStudent').mockRejectedValueOnce(new ApiError(
+      409, 'duplicate', 'Some details are already registered.',
+      { matric_number: ['This matric number is already registered.'] },
+    ))
     renderPage()
     fillValid('chdc/dup1')
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
@@ -55,6 +67,10 @@ describe('RegisterPage', () => {
     expect(screen.getByText('Some details are already registered.')).toBeInTheDocument()
   })
   it('shows backend phone errors on and highlights the phone field', async () => {
+    vi.spyOn(registrations, 'registerStudent').mockRejectedValueOnce(new ApiError(
+      409, 'duplicate', 'Some details are already registered.',
+      { phone_number: ['This phone number is already registered.'] },
+    ))
     renderPage()
     fillValid()
     fireEvent.change(screen.getByLabelText('Phone number'), { target: { value: '08000000001' } })
@@ -90,6 +106,18 @@ describe('RegisterPage', () => {
     }
     expect(screen.getByText('Please correct the highlighted fields.')).toBeInTheDocument()
   })
+  it('shows the backend consent requirement after removing the checkbox', async () => {
+    vi.spyOn(registrations, 'registerStudent').mockRejectedValueOnce(new ApiError(
+      400,
+      'validation_error',
+      'Please accept the privacy consent to proceed.',
+      { has_consented: ['You must accept the NDPR consent policy to proceed.'] },
+    ))
+    renderPage()
+    fillValid()
+    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
+    expect(await screen.findByText(/You must accept the NDPR consent policy to proceed/)).toBeInTheDocument()
+  })
   it('clears corrected field errors and submits valid details', async () => {
     renderPage()
     fillValid('short')
@@ -109,12 +137,9 @@ describe('RegisterPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
     await waitFor(() => expect(screen.getByText("You're registered, Amina!")).toBeInTheDocument(), { timeout: 2000 })
   })
-  it('requires privacy consent before submitting', () => {
+  it('does not render a consent checkbox', () => {
     renderPage()
-    fillValid()
-    fireEvent.click(screen.getByRole('checkbox'))
-    fireEvent.click(screen.getByRole('button', { name: 'Register' }))
-    expect(screen.getByText('You must accept the NDPR consent policy to proceed.')).toBeInTheDocument()
-    expect(screen.queryByText("You're registered, Amina!")).not.toBeInTheDocument()
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(screen.queryByText(/I agree to the processing of my personal data/i)).not.toBeInTheDocument()
   })
 })
