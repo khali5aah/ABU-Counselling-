@@ -11,9 +11,10 @@ describe('RegisteredPage', () => {
         state: {
           first_name: 'Amina',
           last_name: 'Bello',
-          matric_number: 'CHDC/0001',
+          matric_number: 'U25CO0001',
           phone_number: '08031234567',
           created_at: '2026-11-07T00:00:00Z',
+          signup_code: '000042',
         },
       }]}>
         <Routes>
@@ -23,5 +24,7 @@ describe('RegisteredPage', () => {
     )
 
     expect(screen.getByRole('link', { name: /download app \(apk\)/i })).toHaveAttribute('href', '/download-app/')
+    expect(screen.getByText('000042')).toBeInTheDocument()
+    expect(screen.getByText(/expires 15 minutes after registration/i)).toBeInTheDocument()
   })
 })

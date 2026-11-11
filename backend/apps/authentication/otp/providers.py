@@ -42,6 +42,17 @@ class ConsoleOtpProvider(BaseOtpProvider):
         remember_code(phone_e164, code, expires_in_seconds)
 
 
+class DemoOtpProvider(BaseOtpProvider):
+    def send_code(
+        self,
+        phone_e164: str,
+        code: str,
+        expires_in_seconds: int = 300,
+        purpose: str = "verification code",
+    ) -> None:
+        raise OtpDeliveryError("SMS delivery is disabled in demo mode")
+
+
 class TermiiOtpProvider(BaseOtpProvider):
     def send_code(
         self,
@@ -81,6 +92,7 @@ class TermiiOtpProvider(BaseOtpProvider):
 def get_otp_provider() -> BaseOtpProvider:
     provider_map = {
         "console": ConsoleOtpProvider,
+        "demo": DemoOtpProvider,
         "termii": TermiiOtpProvider,
     }
     return provider_map[settings.OTP_PROVIDER]()

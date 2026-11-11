@@ -3,12 +3,12 @@
 Tester: ____________  Date: ____________  Backend URL: ____________  OTP provider: console / termii
 
 ## A. Web registration
-- [ ] A1. Register Amina Bello, `chdc/0001`, `0803 123 4567` → confirmation page shows `CHDC/0001` and `+234 803 123 4567`.
+- [ ] A1. Register Amina Bello, `u25co0001`, `0803 123 4567` → confirmation page shows `U25CO0001` and `+234 803 123 4567`.
 - [ ] A2. Submit empty form → four "This field is required." messages, no request sent.
 - [ ] A3. Phone `12345` → "Enter a valid Nigerian mobile number, e.g. 08031234567."
 - [ ] A4. Same matric in lowercase with a new phone → 409, error under Matric number.
 - [ ] A5. New matric with `+2348031234567` → 409, error under Phone number.
-- [ ] A6. Register a second student (Musa Ali, `CHDC/0002`, `0812 345 6789`) for later tests.
+- [ ] A6. Register a second student (Musa Ali, `U25CO0002`, `0812 345 6789`) for later tests.
 
 ## B. Mobile OTP
 - [ ] B1. Set up → `08031234567` → generic message shown; one `[DEV OTP]` line (or SMS) received.

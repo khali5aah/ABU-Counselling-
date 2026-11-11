@@ -90,11 +90,11 @@ Client-only synthetic code (never sent by server): `network_error` — request f
 ### 3.2 POST /api/v1/registrations/ — public (web)
 Request:
 ```json
-{"first_name": "Amina", "last_name": "Bello", "matric_number": "chdc/0001", "phone_number": "0803 123 4567"}
+{"first_name": "Amina", "last_name": "Bello", "matric_number": "u25co0001", "phone_number": "0803 123 4567"}
 ```
 201 Created:
 ```json
-{"first_name": "Amina", "last_name": "Bello", "matric_number": "CHDC/0001", "phone_number": "+2348031234567", "created_at": "2026-10-21T09:30:00Z"}
+{"first_name": "Amina", "last_name": "Bello", "matric_number": "U25CO0001", "phone_number": "+2348031234567", "created_at": "2026-10-21T09:30:00Z"}
 ```
 400 `validation_error` (any field). 409 `duplicate`, one or both of:
 ```json
@@ -166,7 +166,7 @@ Mock latency: 600 ms on every call. Any input not listed → success path.
 
 | Endpoint | Trigger (after normalization) | Mock response |
 |---|---|---|
-| registrations | `matric_number == "CHDC/DUP"` | 409 duplicate on `matric_number` |
+| registrations | `matric_number == "U25CO9999"` | 409 duplicate on `matric_number` |
 | registrations | `phone_number == "+2348000000001"` | 409 duplicate on `phone_number` |
 | registrations | `phone_number == "+2348000000500"` | 500 server_error |
 | otp/request | `phone_number == "+2348000000429"` | 429 rate_limited, `retry_after: 42` |

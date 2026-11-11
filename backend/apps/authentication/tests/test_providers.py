@@ -2,7 +2,12 @@ import logging
 
 import pytest
 
-from apps.authentication.otp.providers import ConsoleOtpProvider, OtpDeliveryError, TermiiOtpProvider
+from apps.authentication.otp.providers import (
+    ConsoleOtpProvider,
+    DemoOtpProvider,
+    OtpDeliveryError,
+    TermiiOtpProvider,
+)
 
 
 def test_termii_provider_raises_without_exposing_secret(monkeypatch):
@@ -81,3 +86,8 @@ def test_console_provider_logs_dev_code(caplog):
     with caplog.at_level(logging.WARNING, logger="chdc.otp"):
         provider.send_code("+2348031234567", "123456")
     assert "[DEV OTP]" in caplog.text
+
+
+def test_demo_provider_never_logs_or_sends_codes():
+        with pytest.raises(OtpDeliveryError, match="disabled in demo mode"):
+            DemoOtpProvider().send_code("+2348031234567", "123456")

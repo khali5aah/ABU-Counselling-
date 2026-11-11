@@ -61,6 +61,12 @@ class OtpExpiredError(ApiError):
     default_detail = "This code has expired. Request a new one."
 
 
+class OtpDeliveryUnavailableError(ApiError):
+    status_code = 503
+    code = "otp_delivery_unavailable"
+    default_detail = "SMS delivery is not enabled for this demo."
+
+
 class OtpAttemptsExceededError(ApiError):
     status_code = 400
     code = "otp_attempts_exceeded"

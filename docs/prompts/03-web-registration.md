@@ -86,7 +86,7 @@ SPECIFICATION
 7) src/api/mock.ts — registerStudentMock(req): Promise<RegistrationResponse>
   - await 600 ms.
   - Run validateRegistration; if any errors → throw ApiError(400, "validation_error", "Please correct the highlighted fields.", fields as string[] lists).
-  - Normalize; then apply contract §4: matric "CHDC/DUP" → 409 duplicate {matric_number: ["This matric number is already registered."]}; phone "+2348000000001" → 409 duplicate {phone_number: ["This phone number is already registered."]}; phone "+2348000000500" → 500 server_error "Something went wrong. Please try again.".
+  - Normalize; then apply contract §4: matric "U25CO9999" → 409 duplicate {matric_number: ["This matric number is already registered."]}; phone "+2348000000001" → 409 duplicate {phone_number: ["This phone number is already registered."]}; phone "+2348000000500" → 500 server_error "Something went wrong. Please try again.".
   - Else resolve { normalized fields..., created_at: new Date().toISOString() }.
 
 8) src/api/registrations.ts
@@ -98,7 +98,7 @@ SPECIFICATION
 
 10) RegisterPage
   - Header: "CHDC E-Counselling" / subtitle "CHDC student registration".
-  - Fields in this order, each via TextField (label, input, helper, error): First name (autoComplete given-name), Last name (family-name), Matric number (placeholder "e.g. CHDC/0001", autoCapitalize characters), Phone number (type tel, inputMode tel, placeholder "e.g. 0803 123 4567", helper "You'll verify this number by SMS in the mobile app.").
+  - Fields in this order, each via TextField (label, input, helper, error): First name (autoComplete given-name), Last name (family-name), Matric number (placeholder "e.g. U25CO0001", autoCapitalize characters), Phone number (type tel, inputMode tel, placeholder "e.g. 0803 123 4567", helper "You'll verify this number by SMS in the mobile app.").
   - Validate a field on blur; validate all on submit; do not call the API if any client error exists; focus the first invalid field.
   - Editing a field clears that field's error.
   - Submit button "Register"; while pending: disabled, text "Registering…", aria-busy="true". Prevent double submit.
@@ -126,11 +126,11 @@ SPECIFICATION
 
 13) Tests (vitest)
   phone.test.ts: the five valid inputs from contract §1.1 → "+2348031234567"; invalid: "", "12345", "+2348031234", "+2346031234567", "08231234567", "+14155552671" → null; formatNgPhone check.
-  validation.test.ts: each exact message; "chdc/0001" valid and normalizes to "CHDC/0001"; name "123" invalid.
+  validation.test.ts: each exact message; "u25co0001" valid and normalizes to "U25CO0001"; name "123" invalid.
   mock.test.ts (use vi.useFakeTimers or await): every registration row of contract §4 produces the exact ApiError status/code/fields; valid input resolves with normalized values.
   RegisterPage.test.tsx (render inside MemoryRouter; mock config.useMock = true via vi.mock("../config")):
     submit empty → four "This field is required." messages, no navigation;
-    fill valid data with matric "chdc/dup" → after submit, matric field shows "This matric number is already registered." and an Alert is shown;
+    fill valid data with matric "U25CO9999" → after submit, matric field shows "This matric number is already registered." and an Alert is shown;
     fill valid data → navigates to /registered and shows "You're registered, Amina!".
 
 14) .github/workflows/web.yml: on pull_request / push to main with paths web/**; ubuntu-latest; actions/setup-node node 20 with npm cache (cache-dependency-path web/package-lock.json); in web/: npm ci, npm run lint, npm test, npm run build.
@@ -139,7 +139,7 @@ SPECIFICATION
 
 VERIFICATION (all must pass)
   cd web && npm run lint && npm test && npm run build
-  npm run dev with VITE_USE_MOCK=true → manually: valid registration reaches the confirmation page; CHDC/DUP and 08000000001 show duplicate errors under the right field; 08000000500 shows the server error alert.
+  npm run dev with VITE_USE_MOCK=true → manually: valid registration reaches the confirmation page; U25CO9999 and 08000000001 show duplicate errors under the right field; 08000000500 shows the server error alert.
   Live check (when the backend is up): VITE_USE_MOCK=false, VITE_API_BASE_URL=http://localhost:8000 → a real registration returns 201 and appears in Django admin.
 
 FINISH

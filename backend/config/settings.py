@@ -171,6 +171,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 OTP_PROVIDER = os.getenv("OTP_PROVIDER", "console").lower()
+DEMO_SIGNUP_CODES_ENABLED = env_bool("DEMO_SIGNUP_CODES_ENABLED", False)
 OTP_DEV_CODE = os.getenv("OTP_DEV_CODE", "123456")
 OTP_DEV_TEST_PHONES = tuple(env_list("OTP_DEV_TEST_PHONES"))
 OTP_TTL_SECONDS = int(os.getenv("OTP_TTL_SECONDS", "300"))
@@ -186,10 +187,20 @@ TERMII_CHANNEL = os.getenv("TERMII_CHANNEL", "dnd")
 
 if OTP_PROVIDER == "console" and not DEBUG:
     raise ImproperlyConfigured("Console OTP provider is only allowed when DJANGO_DEBUG=true")
+if DEMO_SIGNUP_CODES_ENABLED and DEBUG:
+    raise ImproperlyConfigured(
+        "DEMO_SIGNUP_CODES_ENABLED requires DJANGO_DEBUG=false."
+    )
+if OTP_PROVIDER == "demo" and not DEMO_SIGNUP_CODES_ENABLED:
+    raise ImproperlyConfigured(
+        "The demo OTP provider requires DEMO_SIGNUP_CODES_ENABLED=true."
+    )
 if OTP_PROVIDER == "termii" and (not TERMII_API_KEY or not TERMII_SENDER_ID):
     raise ImproperlyConfigured("TERMII credentials are required when OTP_PROVIDER=termii")
-if OTP_PROVIDER not in {"console", "termii"}:
-    raise ImproperlyConfigured("OTP_PROVIDER must be either 'console' or 'termii'.")
+if OTP_PROVIDER not in {"console", "demo", "termii"}:
+    raise ImproperlyConfigured(
+        "OTP_PROVIDER must be 'console', 'demo', or 'termii'."
+    )
 
 LOGGING = {
     "version": 1,

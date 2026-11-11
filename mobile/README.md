@@ -40,7 +40,11 @@ registrations explicitly listed in `OTP_DEV_TEST_PHONES`, with
 `DJANGO_DEBUG=true` and `OTP_PROVIDER=console`. Other registered numbers use
 their generated development code; unregistered numbers are rejected before
 the OTP screen. List allowlisted numbers in E.164 format (for example,
-`+2348031234567`). Production backends continue generating random OTPs.
+`+2348031234567`). The public demo uses `OTP_PROVIDER=demo` with
+`DEMO_SIGNUP_CODES_ENABLED=true` and `DJANGO_DEBUG=false`; it returns a
+server-generated, one-time registration code to the web confirmation page.
+The app verifies that same code against the API. This mode does not send SMS
+and is only for synthetic demo data.
 
 ## Run against the live backend
 

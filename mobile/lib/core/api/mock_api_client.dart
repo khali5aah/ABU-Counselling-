@@ -90,17 +90,8 @@ class MockApiClient implements ApiClient {
     required String setupToken,
     required String username,
     required String password,
-    required bool hasConsented,
   }) async {
     await _delay();
-    if (!hasConsented) {
-      throw const ApiException(
-        statusCode: 400,
-        code: 'validation_error',
-        message:
-            'You must accept the NDPR consent policy to create an account.',
-      );
-    }
     if (setupToken != 'mock-setup-token' || !_hasVerifiedSetupToken) {
       throw const ApiException(
         statusCode: 400,

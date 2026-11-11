@@ -52,16 +52,16 @@ Only POST is allowed (DRF returns 405 for others; the global handler formats it)
 urlpatterns = [path("", RegistrationCreateView.as_view(), name="registration-create")]  → final URL /api/v1/registrations/
 
 4) management command seed_registration
-Usage: python manage.py seed_registration --first-name Demo --last-name Student --matric CHDC/DEMO1 --phone 08031234567
-Uses the same RegistrationCreateSerializer (so normalization and duplicate rules are identical). Prints "Created registration CHDC/DEMO1 +234******4567" or "Error: <messages>" and exits with code 1 on error. Purpose: lets the mobile dev test the OTP flow without the web app.
+Usage: python manage.py seed_registration --first-name Demo --last-name Student --matric U25CO0001 --phone 08031234567
+Uses the same RegistrationCreateSerializer (so normalization and duplicate rules are identical). Prints "Created registration U25CO0001 +234******4567" or "Error: <messages>" and exits with code 1 on error. Purpose: lets the mobile dev test the OTP flow without the web app.
 
 5) Tests — tests/test_registration_api.py (pytest, APIClient, real DB). Each must assert status code AND the exact JSON body / error envelope:
-  a) valid payload {"first_name":"  Amina ","last_name":"Bello","matric_number":"chdc/0001","phone_number":"0803 123 4567"} → 201; body keys exactly {first_name,last_name,matric_number,phone_number,created_at}; matric "CHDC/0001"; phone "+2348031234567"; first_name "Amina"; one row in DB.
+  a) valid payload {"first_name":"  Amina ","last_name":"Bello","matric_number":"u25co0001","phone_number":"0803 123 4567"} → 201; body keys exactly {first_name,last_name,matric_number,phone_number,created_at}; matric "U25CO0001"; phone "+2348031234567"; first_name "Amina"; one row in DB.
   b) each of the 5 phone formats in contract §1.1 is stored as +2348031234567 (parametrize; fresh DB each case).
   c) missing all fields → 400, error.code "validation_error", error.fields has all four keys.
   d) invalid phone "12345" → 400 with fields.phone_number == ["Enter a valid Nigerian mobile number, e.g. 08031234567."].
   e) invalid matric "A" → exact matric message; invalid name "123" → exact name message.
-  f) duplicate matric with different case ("CHDC/0001" then "chdc/0001") → 409, error.code "duplicate", fields only matric_number.
+  f) duplicate matric with different case ("U25CO0001" then "u25co0001") → 409, error.code "duplicate", fields only matric_number.
   g) duplicate phone in a different format ("08031234567" then "+2348031234567") → 409, fields only phone_number.
   h) both duplicate → 409 with both fields.
   i) malformed JSON body (content_type json, data "{bad") → 400 validation_error.
@@ -78,8 +78,8 @@ VERIFICATION (all must pass)
   python manage.py makemigrations --check --dry-run   → No changes detected
   pytest                                               → all green (including the Prompt 0 tests)
   python manage.py runserver 0.0.0.0:8000, then:
-  curl -s -X POST http://localhost:8000/api/v1/registrations/ -H "Content-Type: application/json" -d '{"first_name":"Amina","last_name":"Bello","matric_number":"chdc/0001","phone_number":"08031234567"}'
-    → 201 {"first_name":"Amina","last_name":"Bello","matric_number":"CHDC/0001","phone_number":"+2348031234567","created_at":"..."}
+  curl -s -X POST http://localhost:8000/api/v1/registrations/ -H "Content-Type: application/json" -d '{"first_name":"Amina","last_name":"Bello","matric_number":"u25co0001","phone_number":"08031234567"}'
+    → 201 {"first_name":"Amina","last_name":"Bello","matric_number":"U25CO0001","phone_number":"+2348031234567","created_at":"..."}
   Repeat the same curl → 409 envelope with both fields.
 
 FINISH

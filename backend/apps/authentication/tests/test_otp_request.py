@@ -98,7 +98,6 @@ def test_development_code_verifies_only_registered_phone(
             "setup_token": verified.data["setup_token"],
             "username": "registered_test_user",
             "password": "StrongPass123!",
-            "has_consented": True,
         },
         format="json",
     )
@@ -139,7 +138,7 @@ def test_otp_request_throttle_allows_ten_distinct_numbers_then_returns_429(
         StudentRegistration.objects.create(
             first_name="Amina",
             last_name="Bello",
-            matric_number=f"CHDC/{number:04d}",
+            matric_number=f"U25CO{number:04d}",
             phone_number=phone_number,
         )
         responses.append(

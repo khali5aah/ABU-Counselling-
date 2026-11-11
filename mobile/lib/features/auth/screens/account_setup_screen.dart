@@ -32,7 +32,6 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
   bool _confirmVisible = false;
   bool _loading = false;
   bool _confirmingLeave = false;
-  bool _hasConsentedToNDPR = false; // Added: NDPR consent tracking state
 
   @override
   void dispose() {
@@ -59,20 +58,12 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       return;
     }
 
-    if (!_hasConsentedToNDPR) {
-      setState(() {
-        _error = 'You must agree to the NDPR privacy policy to create an account.';
-      });
-      return;
-    }
-
     setState(() => _loading = true);
     try {
       final session = await context.read<ApiClient>().setupAccount(
             setupToken: widget.args.setupToken,
             username: _usernameController.text.trim().toLowerCase(),
             password: _passwordController.text,
-            hasConsented: _hasConsentedToNDPR,
           );
       if (!mounted) return;
       context.read<AuthController>().setSession(session);
@@ -235,35 +226,14 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Added: NDPR Compliance Checkbox Tile
-                  CheckboxListTile(
-                    value: _hasConsentedToNDPR,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _hasConsentedToNDPR = value ?? false;
-                      });
-                    },
-                    title: const Text(
-                      'I agree to the processing of my personal data in accordance with the Nigeria Data Protection Regulation (NDPR) privacy policy.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    activeColor: Theme.of(context).primaryColor,
-                  ),
-                  const SizedBox(height: 16),
-
                   if (_error != null) ...[
                     ErrorBanner(message: _error!),
                     const SizedBox(height: 16),
                   ],
-                  
-                  // Updated: Button is disabled unless consent is checked
                   PrimaryButton(
                     label: 'Create account',
                     isLoading: _loading,
-                    onPressed: _hasConsentedToNDPR ? _submit : null,
+                    onPressed: _submit,
                   ),
                 ],
               ),

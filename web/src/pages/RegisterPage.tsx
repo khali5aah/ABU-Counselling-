@@ -11,7 +11,6 @@ const initialValues: RegistrationRequest = {
   last_name: '',
   matric_number: '',
   phone_number: '',
-  has_consented: false,
 }
 const fieldOrder: Array<keyof RegistrationRequest> = ['first_name', 'last_name', 'matric_number', 'phone_number']
 
@@ -54,7 +53,6 @@ export function RegisterPage() {
         last_name: values.last_name.trim(),
         matric_number: values.matric_number.trim(),
         phone_number: values.phone_number.trim(),
-        has_consented: values.has_consented,
       })
       navigate('/registered', { state: response, replace: true })
     } catch (error) {

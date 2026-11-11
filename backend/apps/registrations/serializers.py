@@ -9,7 +9,10 @@ from rest_framework import serializers
 from apps.common.exceptions import DuplicateError
 from apps.common.fields import MatricField, NameField, RegistrationPhoneField
 from apps.authentication.models import PhoneVerification
-from apps.registrations.codes import hash_signup_code
+from apps.registrations.codes import (
+    hash_signup_code,
+    registration_signup_codes_enabled,
+)
 from apps.registrations.models import StudentRegistration
 
 REGISTRATION_OTP_TTL_SECONDS = 15 * 60
@@ -20,14 +23,6 @@ class RegistrationCreateSerializer(serializers.Serializer):
     last_name = NameField()
     matric_number = MatricField()
     phone_number = RegistrationPhoneField()
-    has_consented = serializers.BooleanField(required=True)
-
-    def validate_has_consented(self, value):
-        if not value:
-            raise serializers.ValidationError(
-                "You must accept the NDPR consent policy to proceed."
-            )
-        return value
 
     def create(self, validated_data):
         matric_number = validated_data["matric_number"]
@@ -35,7 +30,7 @@ class RegistrationCreateSerializer(serializers.Serializer):
 
         signup_code = (
             f"{secrets.randbelow(10**6):06d}"
-            if settings.DEBUG and settings.OTP_PROVIDER == "console"
+            if registration_signup_codes_enabled()
             else None
         )
         try:
@@ -78,7 +73,6 @@ class RegistrationCreateSerializer(serializers.Serializer):
                     registration.last_name = validated_data["last_name"]
                     registration.matric_number = matric_number
                     registration.phone_number = phone_number
-                    registration.has_consented = validated_data["has_consented"]
                     registration.status = StudentRegistration.Status.PENDING
                     registration.signup_code_hash = ""
                     registration.signup_code_expires_at = code_expiry

@@ -35,14 +35,6 @@ class SetupAccountSerializer(serializers.Serializer):
     setup_token = serializers.CharField(max_length=128)
     username = UsernameField()
     password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
-    has_consented = serializers.BooleanField(required=True)
-
-    def validate_has_consented(self, value):
-        if not value:
-            raise serializers.ValidationError(
-                "You must accept the NDPR consent policy to create an account."
-            )
-        return value
 
 
 class LoginSerializer(serializers.Serializer):

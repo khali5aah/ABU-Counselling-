@@ -45,7 +45,7 @@ export function RegisteredPage() {
                 : <span>Enter the 6-digit SMS code, then choose a username and password.</span>}
             </li>
           </ol>
-          {registration.signup_code && <p className="expiry-note">This code is one-time-use and expires 24 hours after registration. Save it before leaving this page.</p>}
+          {registration.signup_code && <p className="expiry-note">This code is one-time-use and expires 15 minutes after registration. Save it before leaving this page.</p>}
           {!registration.signup_code && config.showDevOtp && !config.useMock && <DevOtpPanel phoneNumber={registration.phone_number} />}
           {!registration.signup_code && <p className="expiry-note">Keep this phone with you — the code expires in 5 minutes.</p>}
         </section>

@@ -13,15 +13,9 @@ export async function registerStudentMock(req: RegistrationRequest): Promise<Reg
   if (Object.keys(fields).length) {
     throw new ApiError(400, 'validation_error', 'Please correct the highlighted fields.', fields)
   }
-  if (!req.has_consented) {
-    throw new ApiError(400, 'validation_error', 'Please accept the privacy consent to proceed.', {
-      has_consented: ['You must accept the NDPR consent policy to proceed.'],
-    })
-  }
-
   const phone = normalizeLocalPhone(req.phone_number)!
   const matric = normalizeMatric(req.matric_number)
-  if (matric === 'CHDC/DUP1') {
+  if (matric === 'U25CO9999') {
     throw new ApiError(409, 'duplicate', 'Some details are already registered.', {
       matric_number: ['This matric number is already registered.'],
     })

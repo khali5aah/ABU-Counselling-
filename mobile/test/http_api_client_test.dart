@@ -76,7 +76,6 @@ void main() {
       setupToken: 'setup-token',
       username: 'Amina_B',
       password: 'S3cure!pass',
-      hasConsented: true,
     );
     await client.login(username: 'Amina_B', password: 'S3cure!pass');
     await client.me();
@@ -108,7 +107,6 @@ void main() {
       'setup_token': 'setup-token',
       'username': 'amina_b',
       'password': 'S3cure!pass',
-      'has_consented': true,
     });
     expect(jsonDecode(seen[3].body), {
       'username': 'amina_b',

@@ -36,7 +36,7 @@ def registration(db):
     return StudentRegistration.objects.create(
         first_name="Amina",
         last_name="Bello",
-        matric_number="CHDC/0001",
+        matric_number="U25CO0001",
         phone_number="+2348031234567",
     )
 

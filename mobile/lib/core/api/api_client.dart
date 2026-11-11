@@ -13,7 +13,6 @@ abstract class ApiClient {
     required String setupToken,
     required String username,
     required String password,
-    required bool hasConsented,
   });
   Future<AuthSession> login({
     required String username,

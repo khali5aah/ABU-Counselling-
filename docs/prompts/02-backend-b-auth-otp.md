@@ -133,7 +133,7 @@ issue_tokens(user) -> dict: refresh = RefreshToken.for_user(user); return {"acce
   path("otp/request/", ...), path("otp/verify/", ...), path("setup-account/", ...), path("login/", ...), path("refresh/", ...), path("me/", ...), path("logout/", ...)
 
 7) Tests (pytest, APIClient, real DB). tests/conftest.py provides:
-  - registration fixture: StudentRegistration(first_name "Amina", last_name "Bello", matric "CHDC/0001", phone "+2348031234567")
+  - registration fixture: StudentRegistration(first_name "Amina", last_name "Bello", matric "U25CO0001", phone "+2348031234567")
   - sent_codes fixture: monkeypatch apps.authentication.services.get_otp_provider to return a fake provider that appends (phone, code) to a list; yields the list.
   - helper verified_setup_token(client, sent_codes) running request + verify and returning the token.
   Required tests (assert status, error.code and relevant keys every time):

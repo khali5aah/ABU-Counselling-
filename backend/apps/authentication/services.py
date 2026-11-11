@@ -27,12 +27,16 @@ from apps.common.exceptions import (
     InvalidCredentialsError,
     InvalidOtpError,
     OtpAttemptsExceededError,
+    OtpDeliveryUnavailableError,
     OtpExpiredError,
     RateLimitedError,
     SetupTokenInvalidError,
 )
 from apps.common.phone import mask_phone, phone_hash, normalize_ng_phone, InvalidPhoneNumber
-from apps.registrations.codes import hash_signup_code
+from apps.registrations.codes import (
+    hash_signup_code,
+    registration_signup_codes_enabled,
+)
 from apps.registrations.models import StudentRegistration
 
 logger = logging.getLogger("chdc")
@@ -89,8 +93,7 @@ def request_otp(phone: str) -> dict:
 
     if (
         eligible
-        and settings.DEBUG
-        and settings.OTP_PROVIDER == "console"
+        and registration_signup_codes_enabled()
         and registration.signup_code_hash
         and registration.signup_code_used_at is None
         and registration.signup_code_expires_at is not None
@@ -120,6 +123,11 @@ def request_otp(phone: str) -> dict:
             "is_registration_code": True,
         }
     
+    if settings.DEMO_SIGNUP_CODES_ENABLED and eligible:
+        raise OtpExpiredError(
+            message="This registration code expired. Submit registration again for a new code."
+        )
+
     if not eligible:
         if settings.DEBUG and settings.OTP_PROVIDER == "console":
             raise serializers.ValidationError(
@@ -159,6 +167,8 @@ def request_otp(phone: str) -> dict:
         get_otp_provider().send_code(phone, code, settings.OTP_TTL_SECONDS)
     except OtpDeliveryError:
         logger.error("otp delivery failed phone=%s", mask_phone(phone))
+        if settings.OTP_PROVIDER == "demo":
+            raise OtpDeliveryUnavailableError()
 
     return {
         "request_id": str(verification.id),
@@ -232,6 +242,8 @@ def request_password_reset(phone: str) -> dict:
             )
         except OtpDeliveryError:
             logger.error("password reset otp delivery failed phone=%s", mask_phone(phone))
+            if settings.OTP_PROVIDER == "demo":
+                raise OtpDeliveryUnavailableError()
         return {
             "request_id": str(reset.id),
             "message": GENERIC_PASSWORD_RESET_MESSAGE,

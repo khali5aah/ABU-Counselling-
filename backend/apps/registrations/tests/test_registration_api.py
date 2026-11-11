@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.conf import settings
 from django.core.cache import cache
@@ -17,21 +19,20 @@ def test_registration_api_creates_record(phone_number):
     payload = {
         "first_name": "Amina",
         "last_name": "Bello",
-        "matric_number": "CHDC/0001",
+        "matric_number": "U25CO0001",
         "phone_number": phone_number,
-        "has_consented": True,
     }
 
     response = client.post(reverse("registration-create"), payload, format="json")
 
     assert response.status_code == 201
-    assert response.data["matric_number"] == "CHDC/0001"
+    assert response.data["matric_number"] == "U25CO0001"
     assert response.data["phone_number"] == "08031234567"
     assert response.data["first_name"] == "Amina"
-    saved = StudentRegistration.objects.get(matric_number="CHDC/0001")
+    saved = StudentRegistration.objects.get(matric_number="U25CO0001")
     assert saved.phone_number == "08031234567"
     assert response.data.get("status") is None
-    assert StudentRegistration.objects.get(matric_number="CHDC/0001").status == "PENDING"
+    assert StudentRegistration.objects.get(matric_number="U25CO0001").status == "PENDING"
 
 
 @pytest.mark.django_db
@@ -39,16 +40,15 @@ def test_registration_api_rejects_duplicate_matric_or_phone():
     StudentRegistration.objects.create(
         first_name="Amina",
         last_name="Bello",
-        matric_number="CHDC/0001",
+        matric_number="U25CO0001",
         phone_number="08031234567",
     )
     client = APIClient()
     payload = {
         "first_name": "Mary",
         "last_name": "Jane",
-        "matric_number": "CHDC/0001",
+        "matric_number": "U25CO0001",
         "phone_number": "08031234568",
-        "has_consented": True,
     }
 
     response = client.post(reverse("registration-create"), payload, format="json")
@@ -64,7 +64,7 @@ def test_registration_api_validates_phone_and_names():
     payload = {
         "first_name": "",
         "last_name": "Bello",
-        "matric_number": "CHDC/0001",
+        "matric_number": "U25CO0001",
         "phone_number": "12345",
     }
 
@@ -82,9 +82,8 @@ def test_registration_api_accepts_any_11_digit_prefix(phone_number):
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": "CHDC/0001",
+            "matric_number": "U25CO0001",
             "phone_number": phone_number,
-            "has_consented": True,
         },
         format="json",
     )
@@ -104,9 +103,8 @@ def test_registration_api_rejects_non_local_or_wrong_length_phone(phone_number):
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": "CHDC/0001",
+            "matric_number": "U25CO0001",
             "phone_number": phone_number,
-            "has_consented": True,
         },
         format="json",
     )
@@ -119,7 +117,7 @@ def test_registration_api_rejects_non_local_or_wrong_length_phone(phone_number):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("matric_number", ["CHDC/001", "CHDC/00011"])
+@pytest.mark.parametrize("matric_number", ["U25CO001", "U25CO00011"])
 def test_registration_api_requires_exactly_nine_matric_characters(matric_number):
     response = APIClient().post(
         reverse("registration-create"),
@@ -128,7 +126,6 @@ def test_registration_api_requires_exactly_nine_matric_characters(matric_number)
             "last_name": "Bello",
             "matric_number": matric_number,
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
@@ -142,39 +139,37 @@ def test_registration_api_requires_exactly_nine_matric_characters(matric_number)
 
 
 @pytest.mark.django_db
-def test_registration_api_accepts_any_nine_matric_characters():
+def test_registration_api_accepts_u25co_matric_example():
     response = APIClient().post(
         reverse("registration-create"),
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": "!@#$%^&*(",
+            "matric_number": "U25CO1234",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
 
     assert response.status_code == 201
-    assert response.data["matric_number"] == "!@#$%^&*("
+    assert response.data["matric_number"] == "U25CO1234"
 
 
 @pytest.mark.django_db
-def test_registration_api_checks_matric_length_before_uppercasing():
+def test_registration_api_normalizes_matric_to_uppercase():
     response = APIClient().post(
         reverse("registration-create"),
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": "ß12345678",
+            "matric_number": "u25co1234",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
 
     assert response.status_code == 201
-    assert response.data["matric_number"] == "SS12345678"
+    assert response.data["matric_number"] == "U25CO1234"
 
 
 @pytest.mark.django_db
@@ -184,33 +179,30 @@ def test_registration_api_trims_matric_number_whitespace():
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": " CHDC/0001 ",
+            "matric_number": " U25CO0001 ",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
 
     assert response.status_code == 201
-    assert response.data["matric_number"] == "CHDC/0001"
+    assert response.data["matric_number"] == "U25CO0001"
 
 
 @pytest.mark.django_db
-def test_registration_api_requires_consent():
+def test_registration_api_does_not_require_consent():
     client = APIClient()
     payload = {
         "first_name": "Amina",
         "last_name": "Bello",
-        "matric_number": "CHDC/0001",
+        "matric_number": "U25CO0001",
         "phone_number": "08031234567",
-        "has_consented": False,
     }
 
     response = client.post(reverse("registration-create"), payload, format="json")
 
-    assert response.status_code == 400
-    assert response.data["error"]["code"] == "validation_error"
-    assert not StudentRegistration.objects.exists()
+    assert response.status_code == 201
+    assert StudentRegistration.objects.filter(matric_number="U25CO0001").exists()
 
 
 @pytest.mark.django_db
@@ -223,9 +215,8 @@ def test_registration_throttle_allows_ten_requests_then_returns_429(monkeypatch)
     payload = {
         "first_name": "Amina",
         "last_name": "Bello",
-        "matric_number": "CHDC/0001",
+        "matric_number": "U25CO0001",
         "phone_number": "08031234567",
-        "has_consented": True,
     }
     responses = [
         client.post(reverse("registration-create"), payload, format="json")
@@ -238,25 +229,28 @@ def test_registration_throttle_allows_ten_requests_then_returns_429(monkeypatch)
 
 
 @pytest.mark.django_db
-def test_development_signup_code_creates_mobile_account_once(monkeypatch):
-    monkeypatch.setattr(settings, "DEBUG", True)
-    monkeypatch.setattr(settings, "OTP_PROVIDER", "console")
+def test_demo_signup_code_creates_mobile_account_once(monkeypatch):
+    monkeypatch.setattr(settings, "DEBUG", False)
+    monkeypatch.setattr(settings, "OTP_PROVIDER", "demo")
+    monkeypatch.setattr(settings, "DEMO_SIGNUP_CODES_ENABLED", True)
+    monkeypatch.setattr(
+        "apps.registrations.serializers.secrets.randbelow", lambda _: 42
+    )
     client = APIClient()
     registration = client.post(
         reverse("registration-create"),
         {
             "first_name": "Amina",
             "last_name": "Bello",
-            "matric_number": "CHDC/0002",
+            "matric_number": "U25CO0002",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
     assert registration.status_code == 201
     signup_code = registration.data["signup_code"]
-    record = StudentRegistration.objects.get(matric_number="CHDC/0002")
-    assert signup_code.isdigit() and len(signup_code) == 6
+    record = StudentRegistration.objects.get(matric_number="U25CO0002")
+    assert signup_code == "000042"
     assert record.signup_code_hash == hash_signup_code(record.id, signup_code)
     assert record.signup_code_expires_at is not None
     remaining = (record.signup_code_expires_at - timezone.now()).total_seconds()
@@ -270,6 +264,18 @@ def test_development_signup_code_creates_mobile_account_once(monkeypatch):
     assert request.status_code == 200
     assert request.data["is_registration_code"] is True
     assert request.data["expires_in"] <= 15 * 60
+
+    wrong_code = client.post(
+        "/api/v1/auth/otp/verify/",
+        {
+            "phone_number": "08031234567",
+            "request_id": request.data["request_id"],
+            "code": "999999",
+        },
+        format="json",
+    )
+    assert wrong_code.status_code == 400
+    assert wrong_code.data["error"]["code"] == "invalid_otp"
 
     verified = client.post(
         "/api/v1/auth/otp/verify/",
@@ -287,7 +293,6 @@ def test_development_signup_code_creates_mobile_account_once(monkeypatch):
             "setup_token": verified.data["setup_token"],
             "username": "amina_bello",
             "password": "StrongPass123!",
-            "has_consented": True,
         },
         format="json",
     )
@@ -302,7 +307,64 @@ def test_development_signup_code_creates_mobile_account_once(monkeypatch):
         {"phone_number": "08031234567"},
         format="json",
     )
-    assert reused.status_code == 400
+    assert reused.status_code == 200
+    reused_verification = client.post(
+        "/api/v1/auth/otp/verify/",
+        {
+            "phone_number": "08031234567",
+            "request_id": reused.data["request_id"],
+            "code": signup_code,
+        },
+        format="json",
+    )
+    assert reused_verification.status_code == 400
+    assert reused_verification.data["error"]["code"] == "invalid_otp"
+
+
+@pytest.mark.django_db
+def test_demo_signup_code_expires_before_mobile_verification(monkeypatch):
+    monkeypatch.setattr(settings, "DEBUG", False)
+    monkeypatch.setattr(settings, "OTP_PROVIDER", "demo")
+    monkeypatch.setattr(settings, "DEMO_SIGNUP_CODES_ENABLED", True)
+    monkeypatch.setattr(
+        "apps.registrations.serializers.secrets.randbelow", lambda _: 42
+    )
+    client = APIClient()
+    registration = client.post(
+        reverse("registration-create"),
+        {
+            "first_name": "Amina",
+            "last_name": "Bello",
+            "matric_number": "U25CO0003",
+            "phone_number": "08031234567",
+        },
+        format="json",
+    )
+    assert registration.status_code == 201
+
+    request = client.post(
+        "/api/v1/auth/otp/request/",
+        {"phone_number": "08031234567"},
+        format="json",
+    )
+    assert request.status_code == 200
+
+    record = StudentRegistration.objects.get(matric_number="U25CO0003")
+    record.signup_code_expires_at = timezone.now() - timedelta(seconds=1)
+    record.save(update_fields=["signup_code_expires_at"])
+    expired = client.post(
+        "/api/v1/auth/otp/verify/",
+        {
+            "phone_number": "08031234567",
+            "request_id": request.data["request_id"],
+            "code": registration.data["signup_code"],
+        },
+        format="json",
+    )
+    assert expired.status_code == 400
+    assert expired.data["error"]["code"] == "otp_expired"
+    record.refresh_from_db()
+    assert record.status == StudentRegistration.Status.EXPIRED
 
 
 @pytest.mark.django_db
@@ -310,7 +372,7 @@ def test_registration_can_be_reused_only_before_completion():
     existing = StudentRegistration.objects.create(
         first_name="Amina",
         last_name="Bello",
-        matric_number="CHDC/0001",
+        matric_number="U25CO0001",
         phone_number="08031234567",
         status=StudentRegistration.Status.PENDING,
     )
@@ -319,9 +381,8 @@ def test_registration_can_be_reused_only_before_completion():
         {
             "first_name": "Mary",
             "last_name": "Jane",
-            "matric_number": "CHDC/0002",
+            "matric_number": "U25CO0002",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
@@ -329,7 +390,7 @@ def test_registration_can_be_reused_only_before_completion():
     existing.refresh_from_db()
     assert StudentRegistration.objects.count() == 1
     assert existing.first_name == "Mary"
-    assert existing.matric_number == "CHDC/0002"
+    assert existing.matric_number == "U25CO0002"
     assert existing.phone_number == "08031234567"
     assert existing.status == StudentRegistration.Status.PENDING
 
@@ -340,9 +401,8 @@ def test_registration_can_be_reused_only_before_completion():
         {
             "first_name": "Mary",
             "last_name": "Jane",
-            "matric_number": "CHDC/0002",
+            "matric_number": "U25CO0002",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )
@@ -357,9 +417,8 @@ def test_registration_can_be_reused_only_before_completion():
         {
             "first_name": "Mary",
             "last_name": "Jane",
-            "matric_number": "CHDC/0002",
+            "matric_number": "U25CO0002",
             "phone_number": "08031234567",
-            "has_consented": True,
         },
         format="json",
     )

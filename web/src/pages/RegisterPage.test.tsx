@@ -14,7 +14,7 @@ function renderPage() {
   </Routes></MemoryRouter>)
 }
 
-function fillValid(matric = 'CHDC/0001') {
+function fillValid(matric = 'U25CO0001') {
   fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Amina' } })
   fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Bello' } })
   fireEvent.change(screen.getByLabelText('Matric number'), { target: { value: matric } })
@@ -27,7 +27,7 @@ describe('RegisterPage', () => {
     vi.spyOn(registrations, 'registerStudent').mockResolvedValue({
       first_name: 'Amina',
       last_name: 'Bello',
-      matric_number: 'CHDC/0001',
+      matric_number: 'U25CO0001',
       phone_number: '08031234567',
       created_at: new Date(0).toISOString(),
     })
@@ -59,7 +59,7 @@ describe('RegisterPage', () => {
       { matric_number: ['This matric number is already registered.'] },
     ))
     renderPage()
-    fillValid('chdc/dup1')
+    fillValid('u25co9999')
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
     expect(await screen.findByText('This matric number is already registered.', {}, { timeout: 2000 })).toBeInTheDocument()
     expect(screen.getByLabelText('Matric number')).toHaveAttribute('aria-invalid', 'true')
@@ -106,17 +106,16 @@ describe('RegisterPage', () => {
     }
     expect(screen.getByText('Please correct the highlighted fields.')).toBeInTheDocument()
   })
-  it('shows the backend consent requirement after removing the checkbox', async () => {
-    vi.spyOn(registrations, 'registerStudent').mockRejectedValueOnce(new ApiError(
-      400,
-      'validation_error',
-      'Please accept the privacy consent to proceed.',
-      { has_consented: ['You must accept the NDPR consent policy to proceed.'] },
-    ))
+  it('submits registration without a consent field', async () => {
     renderPage()
     fillValid()
     fireEvent.click(screen.getByRole('button', { name: 'Register' }))
-    expect(await screen.findByText(/You must accept the NDPR consent policy to proceed/)).toBeInTheDocument()
+    await waitFor(() => expect(registrations.registerStudent).toHaveBeenCalledWith({
+      first_name: 'Amina',
+      last_name: 'Bello',
+      matric_number: 'U25CO0001',
+      phone_number: '08031234567',
+    }))
   })
   it('clears corrected field errors and submits valid details', async () => {
     renderPage()

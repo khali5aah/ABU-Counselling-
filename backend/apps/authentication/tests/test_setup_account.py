@@ -24,7 +24,6 @@ def test_setup_account_success_and_token_reuse(api_client, registration, sent_co
             "setup_token": token,
             "username": "Amina_B",
             "password": "StrongPass123!",
-            "has_consented": True,
         },
         format="json",
     )
@@ -42,7 +41,6 @@ def test_setup_account_success_and_token_reuse(api_client, registration, sent_co
             "setup_token": token,
             "username": "another_user",
             "password": "StrongPass123!",
-            "has_consented": True,
         },
         format="json",
     )
@@ -67,7 +65,6 @@ def test_setup_account_rejects_duplicate_username_and_weak_password(api_client, 
             "setup_token": token,
             "username": "new_user",
             "password": "12345678",
-            "has_consented": True,
         },
         format="json",
     )
@@ -80,45 +77,8 @@ def test_setup_account_rejects_duplicate_username_and_weak_password(api_client, 
             "setup_token": token,
             "username": "Taken_User",
             "password": "StrongPass123!",
-            "has_consented": True,
         },
         format="json",
     )
     assert duplicate_user.status_code == 409
     assert duplicate_user.data["error"]["code"] == "duplicate"
-
-
-@pytest.mark.django_db
-def test_setup_account_requires_explicit_consent(api_client, registration, sent_codes):
-    otp = api_client.post(
-        "/api/v1/auth/otp/request/",
-        {"phone_number": "08031234567"},
-        format="json",
-    )
-    verification = api_client.post(
-        "/api/v1/auth/otp/verify/",
-        {
-            "phone_number": "08031234567",
-            "request_id": otp.data["request_id"],
-            "code": sent_codes[-1][1],
-        },
-        format="json",
-    )
-    token = verification.data["setup_token"]
-
-    for payload in (
-        {"setup_token": token, "username": "amina_b", "password": "StrongPass123!"},
-        {
-            "setup_token": token,
-            "username": "amina_b",
-            "password": "StrongPass123!",
-            "has_consented": False,
-        },
-    ):
-        response = api_client.post(
-            "/api/v1/auth/setup-account/",
-            payload,
-            format="json",
-        )
-        assert response.status_code == 400
-        assert response.data["error"]["code"] == "validation_error"

@@ -8,8 +8,8 @@ describe('validateRegistration', () => {
     expect(Object.values(validateRegistration(blank))).toEqual([REQUIRED, REQUIRED, REQUIRED, REQUIRED])
   })
   it('normalizes and accepts matric numbers', () => {
-    expect(normalizeMatric('chdc/0001')).toBe('CHDC/0001')
-    expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: 'chdc/0001', phone_number: '08031234567' }).matric_number).toBeUndefined()
+    expect(normalizeMatric('u25co0001')).toBe('U25CO0001')
+    expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: 'u25co0001', phone_number: '08031234567' }).matric_number).toBeUndefined()
     expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: '1_!?abcde', phone_number: '08031234567' }).matric_number).toBeUndefined()
     expect(validateRegistration({ first_name: 'Amina', last_name: 'Bello', matric_number: 'ß12345678', phone_number: '08031234567' }).matric_number).toBeUndefined()
   })
